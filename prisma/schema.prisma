@@ -1,0 +1,209 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User model
+model User {
+  id                        Int                        @id @default(autoincrement())
+  name                      String
+  email                     String                     @unique
+  password                  String
+  age                       Int
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  projects                  Project[]
+  comments                  Comment[]
+  activities                Activity[]
+  projectMemberAssociations ProjectMemberAssociation[]
+  teamMembers               TeamMember[]
+  tasksAssigne              Task[]                     @relation("TaskAssignee")
+  tasksCreator              Task[]                     @relation("TaskCreator")
+  UserSkill                 UserSkill[]
+
+  @@index([name]) // Index on name
+  @@index([email]) // Index on email
+  @@index([password])
+}
+
+// Status model
+model ProjectStatus {
+  id       Int       @id @default(autoincrement())
+  name     String
+  projects Project[]
+
+  @@index([name]) // Index on name
+}
+
+model TaskStatus {
+  id        Int      @id @default(autoincrement())
+  name      String
+  projectId Int?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+
+  @@index([name]) // Index on name
+}
+
+// Project model
+model Project {
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  statusId                 Int?                       @default(0)
+  status                   ProjectStatus?             @relation(fields: [statusId], references: [id])
+  ManagerId                Int
+  Manager                  User                       @relation(fields: [ManagerId], references: [id])
+  tasks                    Task[]
+  projectTeamAssociations  ProjectTeamAssociation[]
+  ProjectMemberAssociation ProjectMemberAssociation[]
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  description              String
+  startDate                DateTime                   @default(now())
+  endDate                  DateTime?
+  TaskStatus               TaskStatus[]
+
+  @@index([name]) // Index on name
+}
+
+// Task model
+model Task {
+  id          Int         @id @default(autoincrement())
+  name        String
+  statusId    Int?
+  status      TaskStatus? @relation(fields: [statusId], references: [id])
+  startDate   DateTime?   @default(now())
+  endDate     DateTime?
+  label       String?
+  description String?
+  StoryPoint  Int?
+  AssigneeId  Int?
+  assignee    User?       @relation(name: "TaskAssignee", fields: [AssigneeId], references: [id])
+  creatorId   Int
+  creator     User?        @relation(name: "TaskCreator", fields: [creatorId], references: [id])
+  projectId   Int
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  activities  Activity[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Self-referencing relationship for subtasks
+  parentTaskId Int?
+  parentTask   Task?  @relation("TaskSubtasks", fields: [parentTaskId], references: [id])
+  children     Task[] @relation("TaskSubtasks")
+
+  @@index([statusId]) // Index on statusId
+  @@index([AssigneeId]) // Index on AssigneeId
+}
+
+
+// Comment model
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([userId]) // Index on userId
+  @@index([taskId]) // Index on taskId
+}
+
+// Activity model
+model Activity {
+  id          Int      @id @default(autoincrement())
+  description String
+  taskId      Int
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([taskId]) // Index on taskId
+  @@index([userId]) // Index on userId
+}
+
+// ProjectMemberAssociation model
+model ProjectMemberAssociation {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId]) // Index on projectId
+  @@index([userId]) // Index on userId
+}
+
+// Team model
+model Team {
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  members                TeamMember[]
+  ProjectTeamAssociation ProjectTeamAssociation[]
+
+  @@index([name]) // Index on name
+}
+
+// TeamMember model
+model TeamMember {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId    Int
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId]) // Index on userId
+  @@index([teamId]) // Index on teamId
+}
+
+// ProjectTeamAssociation model
+model ProjectTeamAssociation {
+  id        Int     @id @default(autoincrement())
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  teamId    Int
+  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([projectId]) // Index on projectId
+  @@index([teamId]) // Index on teamId
+}
+
+//skills model 
+model Skill {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  UserSkill UserSkill[]
+
+  @@index([id])
+  @@index([name])
+}
+
+//UserSkills model 
+model UserSkill {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId   Int
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([skillId])
+}
