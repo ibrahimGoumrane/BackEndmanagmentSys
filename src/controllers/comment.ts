@@ -71,7 +71,6 @@ export const getCommentBasedTask: RequestHandler<
       },
     });
 
-    
     const returnedComment = commentModel.map((comm, index) => ({
       id: comm.id,
       content: comm.content,
@@ -123,7 +122,18 @@ export const modifComment: RequestHandler<
     if (content !== undefined) updateData.content = content;
     if (taskId !== undefined) updateData.taskId = taskId;
     if (userId !== undefined) updateData.userId = userId;
+    if (id === "-1") {
+      return next();
+    }
 
+    const founded = await comment.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+    if (!founded) {
+      return next();
+    }
     const updatedComment = await comment.update({
       where: {
         id: Number(id),

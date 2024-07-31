@@ -6,11 +6,14 @@ import { comment } from "../util/validators/validateData";
 const router = express.Router();
 
 router.get("/:id", CommentController.getComment);
-router.get("/task/:id" , CommentController.getCommentBasedTask)
+router.get("/task/:id", CommentController.getCommentBasedTask);
 router.post("/", comment, checkError, CommentController.createComment);
-
-router.use(UserAutorisation);
-router.put("/:id", UserAutorisation, CommentController.modifComment);
+router.put(
+  "/:id",
+  UserAutorisation,
+  CommentController.modifComment,
+  CommentController.createComment
+);
 
 router.delete("/:id", UserAutorisation, CommentController.deleteComment);
 

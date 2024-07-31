@@ -3,13 +3,11 @@ import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { comment, commentId } from "../models/comment";
 
-const requiresAuth: RequestHandler <
-  unknown,
-  unknown,
-  unknown,
-  unknown
-
->= (req, res, next) => {
+const requiresAuth: RequestHandler<unknown, unknown, unknown, unknown> = (
+  req,
+  res,
+  next
+) => {
   if (req.session.userId) {
     next();
   } else {
@@ -41,6 +39,10 @@ export const UserAutorisation: RequestHandler<
   const { userId } = req.session;
 
   try {
+    if (id == "-1" || !id) {
+      return next();
+    }
+
     const commentModel = await comment.findFirst({
       where: {
         id: Number(id),
