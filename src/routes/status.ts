@@ -6,7 +6,7 @@ import { checkError } from "../middleware/requireAuth";
 const router = Router();
 
 router.get("/projects", StatusController.getAllProjectStatus);
-router.put("/tasks", StatusController.updateTaskStatus);
+router.put("/tasks/:id", StatusController.updateTaskStatus);
 
 router.get("/tasks/:projectId", StatusController.getTaskStatusByProjectID);
 

@@ -27,17 +27,21 @@ export const getTaskStatusByProjectID: RequestHandler = async (
   const { projectId } = req.params;
 
   try {
-    const statusObs = await Taskstatus.findMany({
+    // Fetch and return the newly created task statuses
+    const defaultValues: TaskStatus[] = await Taskstatus.findMany({
       where: {
-        OR: [{ projectId: null }, { projectId: Number(projectId) }],
+        projectId: null,
       },
     });
-
-    if (statusObs.length === 0) {
-      throw createHttpError(404, "No Task Status found");
-    }
-
-    res.status(200).json(statusObs);
+    const returnedValues: TaskStatus[] = await Taskstatus.findMany({
+      where: {
+        projectId: +projectId,
+      },
+    });
+    const returned = [];
+    returned.push(...defaultValues);
+    returned.push(...returnedValues);
+    res.status(200).json(returned);
   } catch (error) {
     next(error);
   }
@@ -65,12 +69,14 @@ export const createTaskStatus: RequestHandler<
     next(error);
   }
 };
+
 export const updateTaskStatus: RequestHandler<
-  unknown,
+  statusDeletion,
   unknown,
   TaskStatus[],
   unknown
 > = async (req, res, next) => {
+  const id = req.params.id;
   const tasks = req.body;
   try {
     if (!tasks || !Array.isArray(tasks)) {
@@ -79,59 +85,43 @@ export const updateTaskStatus: RequestHandler<
         "Please provide a valid array of task statuses"
       );
     }
-    console.log(tasks);
     const newTaskStatusData = tasks
-      .filter((task) => task.projectId)
-      .map((task) => ({
-        id: task.id,
-        name: task.name,
-        projectId: task.projectId ? +task.projectId : null,
+      .filter((stat) => stat.projectId)
+      .map((stat) => ({
+        id: stat.id,
+        name: stat.name,
+        projectId: stat.projectId ? +stat.projectId : null,
       }));
 
-    // Find existing task statuses
-    const taskStatusIds = newTaskStatusData.map((task) => task.id);
-    const existingTaskStatuses = await Taskstatus.findMany({
+    await Taskstatus.deleteMany({
       where: {
-        id: { in: taskStatusIds },
+        projectId: +id,
       },
     });
-
-    const existingTaskStatusIds = new Set(
-      existingTaskStatuses.map((status) => status.id)
-    );
-    const toUpdate = newTaskStatusData.filter((task) =>
-      existingTaskStatusIds.has(task.id)
-    );
-    const toCreate = newTaskStatusData.filter(
-      (task) => !existingTaskStatusIds.has(task.id)
-    );
-    console.log(toCreate);
-    console.log(toUpdate);
-    // Update existing task statuses
-    for (const task of toUpdate) {
-      await Taskstatus.update({
-        where: { id: task.id },
-        data: {
-          name: task.name,
-          projectId: task.projectId,
-        },
-      });
-    }
-
     // Create new task statuses
-    if (toCreate.length > 0) {
-      await Taskstatus.createMany({
-        data: toCreate,
-      });
-    }
-
-    res
-      .status(200)
-      .json({ updated: toUpdate.length, created: toCreate.length });
+    await Taskstatus.createMany({
+      data: newTaskStatusData,
+    });
+    // Fetch and return the newly created task statuses
+    const defaultValues: TaskStatus[] = await Taskstatus.findMany({
+      where: {
+        projectId: null,
+      },
+    });
+    const returnedValues: TaskStatus[] = await Taskstatus.findMany({
+      where: {
+        projectId: +id,
+      },
+    });
+    const returned = [];
+    returned.push(...defaultValues);
+    returned.push(...returnedValues);
+    res.status(200).json(returned);
   } catch (error) {
     next(error);
   }
 };
+
 export const deleteTaskStatus: RequestHandler<
   statusDeletion,
   unknown,
