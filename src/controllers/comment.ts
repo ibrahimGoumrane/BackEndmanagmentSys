@@ -4,10 +4,8 @@ import {
   commentCreation,
   commentUpdate,
   comment,
-  commentData,
 } from "../models/comment";
 import createHttpError from "http-errors";
-import { user } from "../models/user";
 
 export const getComment: RequestHandler<
   commentId,
@@ -52,31 +50,22 @@ export const getCommentBasedTask: RequestHandler<
 > = async (req, res, next) => {
   const { id } = req.params;
   try {
-    const commentModel: commentData[] = await comment.findMany({
+    const commentModel = await comment.findMany({
       where: {
         taskId: Number(id),
-      },
+      },include:{
+        user:true
+      }
     });
     if (!commentModel) {
       throw createHttpError(404, "Comment not found");
     }
-    const commentCreator = await user.findMany({
-      where: {
-        id: {
-          in: commentModel.map((comm) => comm.userId),
-        },
-      },
-      select: {
-        name: true,
-      },
-    });
-
-    const returnedComment = commentModel.map((comm, index) => ({
+    const returnedComment = commentModel.map((comm) => ({
       id: comm.id,
       content: comm.content,
       taskId: comm.taskId,
       userId: comm.userId,
-      userName: commentCreator[index].name,
+      userName: comm.user.name,
       createdAt: comm.createdAt,
       updatedAt: comm.updatedAt,
     }));
