@@ -79,7 +79,7 @@ export const createTask: RequestHandler<
   unknown
 > = async (req, res, next) => {
   try {
-    const { name, projectId, statusId } = req.body;
+    const { name, projectId, statusId, description } = req.body;
     const creatorId = req.session.userId;
 
     if (creatorId === undefined) {
@@ -93,6 +93,7 @@ export const createTask: RequestHandler<
         statusId,
         projectId,
         creatorId,
+        description,
       },
     });
 
@@ -113,7 +114,7 @@ export const updateTask: RequestHandler<
     const {
       id,
       name,
-      assigneeId,
+      AssigneeId,
       StoryPoint,
       endDate,
       label,
@@ -134,28 +135,29 @@ export const updateTask: RequestHandler<
         id,
       },
     });
+    if (!FoundedTask) {
+      return next();
+    }
 
     const updatedData: Partial<taskModif> = {};
     if (name) updatedData.name = name;
-    if (assigneeId) updatedData.assigneeId = assigneeId;
+    if (AssigneeId) updatedData.AssigneeId = AssigneeId;
     if (StoryPoint) updatedData.StoryPoint = StoryPoint;
-    if (endDate) updatedData.endDate = endDate;
     if (label) updatedData.label = label;
     if (parentId) updatedData.parentId = parentId;
     if (statusId) updatedData.statusId = statusId;
     if (projectId) updatedData.projectId = projectId;
     if (description) updatedData.description = description;
-
-    if (!FoundedTask) {
-      return next();
-    }
-
     const UpdatedTask = await task.update({
       where: {
         id,
       },
-      data: updatedData,
+      data: {
+        ...updatedData,
+        endDate: endDate ? new Date(endDate) : undefined,
+      },
     });
+    console.log(UpdatedTask);
 
     return res.status(200).json(UpdatedTask);
   } catch (error) {

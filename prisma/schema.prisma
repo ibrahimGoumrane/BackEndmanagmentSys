@@ -80,7 +80,7 @@ model Task {
   startDate   DateTime?   @default(now())
   endDate     DateTime?
   label       String?
-  description String?
+  description String?   @db.Text
   StoryPoint  Int?
   AssigneeId  Int?
   assignee    User?       @relation(name: "TaskAssignee", fields: [AssigneeId], references: [id])
@@ -106,7 +106,7 @@ model Task {
 // Comment model
 model Comment {
   id        Int      @id @default(autoincrement())
-  content   String
+  content   String   @db.Text
   userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   taskId    Int

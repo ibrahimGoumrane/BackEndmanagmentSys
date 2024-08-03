@@ -15,6 +15,6 @@ router.put(
   CommentController.createComment
 );
 
-router.delete("/:id", UserAutorisation, CommentController.deleteComment);
+router.delete("/task/:id", UserAutorisation, CommentController.deleteComment);
 
 export default router;

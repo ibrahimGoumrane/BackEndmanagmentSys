@@ -53,9 +53,10 @@ export const getCommentBasedTask: RequestHandler<
     const commentModel = await comment.findMany({
       where: {
         taskId: Number(id),
-      },include:{
-        user:true
-      }
+      },
+      include: {
+        user: true,
+      },
     });
     if (!commentModel) {
       throw createHttpError(404, "Comment not found");
@@ -129,9 +130,7 @@ export const modifComment: RequestHandler<
       },
       data: updateData,
     });
-    if (!updatedComment) {
-      throw createHttpError(404, "Comment not found");
-    }
+
     res.status(200).json(updatedComment);
   } catch (error) {
     next(error);
@@ -152,11 +151,13 @@ export const deleteComment: RequestHandler<
       },
     });
     if (!commentExist) {
-      throw createHttpError(404, "Comment not found");
+      res.status(200).json({
+        message: "Comment not found",
+      });
     }
-    const deletedComment = await comment.delete({
+    const deletedComment = await comment.deleteMany({
       where: {
-        id: Number(id),
+        taskId: Number(id),
       },
     });
     res.status(200).json(deletedComment);

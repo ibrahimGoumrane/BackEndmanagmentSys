@@ -12,9 +12,9 @@ export const validateCreateProject = [
 export const validateTask = [
   body("name")
     .notEmpty()
-    .withMessage("Title is required")
+    .withMessage("Name is required")
     .isLength({ max: 191 })
-    .withMessage("Title must not exceed 191 characters"),
+    .withMessage("Name must not exceed 191 characters"),
   body("statusId")
     .optional()
     .isInt()
@@ -26,34 +26,37 @@ export const validateTask = [
     .withMessage("Assignee ID must be an integer"),
   body("StoryPoint")
     .optional({ nullable: true })
-    .custom(value => {
-      if (value === null || (Number.isInteger(value) && value.toString().length <= 4)) {
+    .custom((value) => {
+      if (
+        value === null ||
+        (Number.isInteger(value) && value.toString().length <= 4)
+      ) {
         return true;
       }
-      throw new Error("StoryPoint must be an integer and not exceed 4 characters");
+      throw new Error(
+        "StoryPoint must be an integer and not exceed 4 characters"
+      );
     }),
   body("endDate")
     .optional({ nullable: true })
-    .custom(value => {
-      if (value === null) {
+    .custom((value) => {
+      if (value === null || typeof value === "string") {
         return true;
       }
-      return !isNaN(Date.parse(value));
-    })
-    .withMessage("Invalid endDate format"),
+      throw new Error("Invalid endDate format");
+    }),
   body("label")
     .optional()
     .isLength({ max: 191 })
     .withMessage("Label must not exceed 191 characters"),
   body("startDate")
     .optional({ nullable: true })
-    .custom(value => {
-      if (value === null) {
+    .custom((value) => {
+      if (value === null || typeof value === "string") {
         return true;
       }
-      return !isNaN(Date.parse(value));
-    })
-    .withMessage("Invalid startDate format"),
+      throw new Error("Invalid startDate format");
+    }),
   body("parentId")
     .optional()
     .isInt()

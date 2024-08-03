@@ -51,9 +51,11 @@ export const UserAutorisation: RequestHandler<
         userId: true,
       },
     });
-
+    console.log(commentModel);
+    if (!commentModel) return next();
     const commentOwner = commentModel?.userId;
-    if (userId === commentOwner) {
+
+    if (userId == commentOwner) {
       return next();
     } else {
       return next(

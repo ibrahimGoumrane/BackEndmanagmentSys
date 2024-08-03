@@ -3,15 +3,15 @@ import prisma from "./PrismaInit";
 export interface taskCreation {
   name: string;
   projectId: number;
-  creatorId:number;
-  statusId:number;
+  creatorId: number;
+  statusId: number;
 }
 
 export interface taskModif {
   name: string;
-  assigneeId?: number;
+  AssigneeId?: number;
   StoryPoint?: number;
-  endDate?: Date;
+  endDate?: string;
   label?: string;
   parentId?: number;
   statusId: number;
@@ -27,15 +27,15 @@ export interface task {
   id: number;
   name: string;
   description?: string;
-  assigneeId?: number;
+  AssigneeId?: number;
   storyPoint?: number;
-  endDate?: Date;
+  endDate?: string;
   label?: string;
-  startDate?: Date;
+  startDate?: string;
   parentId?: number;
   statusId?: number;
   createdAt: string;
   updatedAt: string;
-  creatorId:number;
+  creatorId: number;
 }
 export default prisma.task;
