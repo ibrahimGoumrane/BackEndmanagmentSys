@@ -8,8 +8,8 @@ export interface ProjectUpdate {
   name?: string;
   description?: string;
   estimatedDuration?: string;
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: string;
+  endDate?: string;
   ManagerId?: number;
   statusId?: number;
 }

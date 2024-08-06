@@ -63,10 +63,31 @@ export const getTask: RequestHandler = async (req, res, next) => {
       where: {
         id: +id,
       },
+      include: {
+        creator: true,
+        assignee: true,
+        status: true,
+        project: true,
+      },
     });
+    const returnedData = {
+      id: FoundedTask?.id,
+      name: FoundedTask?.name,
+      description: FoundedTask?.description,
+      storyPoint: FoundedTask?.StoryPoint,
+      endDate: FoundedTask?.endDate,
+      startDate: FoundedTask?.startDate,
+      createdAt: FoundedTask?.createdAt,
+      updatedAt: FoundedTask?.updatedAt,
+      creatorName: FoundedTask?.creator?.name,
+      AssigneName: FoundedTask?.assignee?.name,
+      statusName: FoundedTask?.status?.name,
+      projectName: FoundedTask?.project?.name,
+    };
+
     if (!FoundedTask) createHttpError(404, "No task found with this Id " + id);
 
-    res.status(200).json(FoundedTask);
+    res.status(200).json(returnedData);
   } catch (error) {
     next(error);
   }
