@@ -24,6 +24,7 @@ model User {
   tasksAssigne              Task[]                     @relation("TaskAssignee")
   tasksCreator              Task[]                     @relation("TaskCreator")
   UserSkill                 UserSkill[]
+  teams                      Team[]
 
   @@index([name]) // Index on name
   @@index([email]) // Index on email
@@ -45,7 +46,6 @@ model TaskStatus {
   projectId Int?
   project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tasks     Task[]
-
 
   @@index([name]) // Index on name
 }
@@ -80,12 +80,12 @@ model Task {
   startDate   DateTime?   @default(now())
   endDate     DateTime?
   label       String?
-  description String?   @db.Text
+  description String?     @db.Text
   StoryPoint  Int?
   AssigneeId  Int?
   assignee    User?       @relation(name: "TaskAssignee", fields: [AssigneeId], references: [id])
   creatorId   Int
-  creator     User?        @relation(name: "TaskCreator", fields: [creatorId], references: [id])
+  creator     User?       @relation(name: "TaskCreator", fields: [creatorId], references: [id])
   projectId   Int
   project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   comments    Comment[]
@@ -101,7 +101,6 @@ model Task {
   @@index([statusId]) // Index on statusId
   @@index([AssigneeId]) // Index on AssigneeId
 }
-
 
 // Comment model
 model Comment {
@@ -152,6 +151,8 @@ model Team {
   id                     Int                      @id @default(autoincrement())
   name                   String
   members                TeamMember[]
+  ownerId                Int
+  owner                  User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ProjectTeamAssociation ProjectTeamAssociation[]
 
   @@index([name]) // Index on name

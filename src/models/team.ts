@@ -16,6 +16,7 @@ export interface TeamDeletion {
 export interface Team {
   id: number;
   name: string;
+  ownerId: string | number;
   createdAt: string;
   updatedAt: string;
 }

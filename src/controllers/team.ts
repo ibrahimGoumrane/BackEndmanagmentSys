@@ -1,5 +1,12 @@
 import { RequestHandler } from "express";
-import { team, projectTeamAssociation, teamMember } from "../models/team";
+import {
+  team,
+  projectTeamAssociation,
+  teamMember,
+  TeamDeletion,
+  Team,
+  TeamCreation,
+} from "../models/team";
 import createHttpError from "http-errors";
 import { user } from "../models/user";
 
@@ -18,6 +25,25 @@ export const getTeams: RequestHandler = async (req, res, next) => {
       take: 10,
     });
     res.status(200).json({ teams });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTeam: RequestHandler<
+  TeamDeletion,
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const teamData = await team.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+    res.status(200).json(teamData);
   } catch (error) {
     next(error);
   }
@@ -62,20 +88,50 @@ export const getUserTeam: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
-export const createTeam: RequestHandler = async (req, res, next) => {
+export const getTeamMembers: RequestHandler = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const userTeams = await teamMember.findMany({
+      where: {
+        teamId: Number(id),
+      },
+      include: {
+        user: true,
+      },
+    });
+    if (!userTeams) {
+      throw createHttpError(404, "there is no user in this team");
+    }
+    const returnValue = userTeams.map((user) => user.user);
+    res.status(200).json(returnValue);
+  } catch (error) {
+    next(error);
+  }
+};
+export const createTeam: RequestHandler<
+  unknown,
+  unknown,
+  TeamCreation,
+  unknown
+> = async (req, res, next) => {
   const { name } = req.body;
+  const { userId } = req.session;
   try {
     const teamExsist = await team.findFirst({
       where: {
         name,
       },
     });
+    if (!userId) {
+      throw createHttpError(401, "User not authenticated");
+    }
     if (teamExsist) {
       throw createHttpError(400, "Team already exists");
     }
     const newTeam = await team.create({
       data: {
         name,
+        ownerId: userId,
       },
     });
 
@@ -84,7 +140,12 @@ export const createTeam: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
-export const addUserTeam: RequestHandler = async (req, res, next) => {
+export const addUserTeam: RequestHandler<
+  TeamDeletion,
+  unknown,
+  Team,
+  unknown
+> = async (req, res, next) => {
   const { userId } = req.session;
   const { id } = req.params;
   try {
@@ -128,7 +189,12 @@ export const addUserTeam: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
-export const updateTeam: RequestHandler = async (req, res, next) => {
+export const updateTeam: RequestHandler<
+  TeamDeletion,
+  unknown,
+  Team,
+  unknown
+> = async (req, res, next) => {
   const { name } = req.body;
   const { id } = req.params;
   try {
@@ -153,7 +219,12 @@ export const updateTeam: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
-export const deleteTeam: RequestHandler = async (req, res, next) => {
+export const deleteTeam: RequestHandler<
+  TeamDeletion,
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
   const { id } = req.params;
   try {
     const teamExsist = await team.findFirst({
