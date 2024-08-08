@@ -7,7 +7,6 @@ const router = Router();
 router.get("/", checkError, TeamController.getTeams);
 router.get("/members/:id", TeamController.getTeamByUserId);
 router.get("/:id", TeamController.getTeam);
-router.get("/project/:id", TeamController.getProjectTeam);
 router.get("/user/:id", TeamController.getUserTeam);
 router.get("/members/:id", TeamController.getTeamMembers);
 router.post("/createTeam", team, checkError, TeamController.createTeam);

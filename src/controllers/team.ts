@@ -1,7 +1,6 @@
 import { RequestHandler } from "express";
 import {
   team,
-  projectTeamAssociation,
   teamMember,
   TeamDeletion,
   Team,
@@ -69,26 +68,6 @@ export const getTeam: RequestHandler<
       },
     });
     res.status(200).json(teamData);
-  } catch (error) {
-    next(error);
-  }
-};
-export const getProjectTeam: RequestHandler = async (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const projectTeams = await projectTeamAssociation.findMany({
-      where: {
-        projectId: Number(id),
-      },
-      include: {
-        team: true,
-      },
-    });
-    if (!projectTeams) {
-      throw createHttpError(404, "There is no Teams in this project");
-    }
-
-    res.status(200).json({ projectTeams });
   } catch (error) {
     next(error);
   }

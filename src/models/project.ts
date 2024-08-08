@@ -23,5 +23,4 @@ export interface ProjectSearch {
 }
 
 export const project = prisma.project;
-export const projectTeamAssociation = prisma.projectTeamAssociation;
 export const projectMemeberAssociation = prisma.projectMemberAssociation;

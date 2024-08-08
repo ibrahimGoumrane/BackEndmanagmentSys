@@ -16,7 +16,6 @@ router.post(
 router.get("/user/", ProjectController.getUserProjects);
 router.get("/user/:id", ProjectController.getProjectMembers);
 router.get("/status/:id", ProjectController.getProjectStatus);
-router.get("/team/:id", ProjectController.getProjectTeams);
 router.get("/task/:id", ProjectController.getProjectTasks);
 router.get("/comment/:id", ProjectController.getProjectActivity);
 router.get("/:id", ProjectController.getProject);

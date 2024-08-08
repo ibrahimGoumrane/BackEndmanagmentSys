@@ -59,7 +59,6 @@ model Project {
   ManagerId                Int
   Manager                  User                       @relation(fields: [ManagerId], references: [id])
   tasks                    Task[]
-  projectTeamAssociations  ProjectTeamAssociation[]
   ProjectMemberAssociation ProjectMemberAssociation[]
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
@@ -153,7 +152,6 @@ model Team {
   members                TeamMember[]
   ownerId                Int
   owner                  User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ProjectTeamAssociation ProjectTeamAssociation[]
 
   @@index([name]) // Index on name
 }
@@ -172,17 +170,6 @@ model TeamMember {
   @@index([teamId]) // Index on teamId
 }
 
-// ProjectTeamAssociation model
-model ProjectTeamAssociation {
-  id        Int     @id @default(autoincrement())
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  teamId    Int
-  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  @@index([projectId]) // Index on projectId
-  @@index([teamId]) // Index on teamId
-}
 
 //skills model 
 model Skill {

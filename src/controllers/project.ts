@@ -7,7 +7,6 @@ import {
   ProjectUpdate,
   project,
   projectMemeberAssociation,
-  projectTeamAssociation,
 } from "../models/project";
 import { User, user } from "../models/user";
 
@@ -276,26 +275,7 @@ export const getProjectStatus: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
-export const getProjectTeams: RequestHandler = async (req, res, next) => {
-  const { id } = req.params;
 
-  try {
-    const projectTeams = await projectTeamAssociation.findMany({
-      where: {
-        projectId: Number(id),
-      },
-      include: {
-        team: true,
-      },
-    });
-    if (!projectTeams) {
-      throw createHttpError(404, "No teams found");
-    }
-    res.status(200).json(projectTeams);
-  } catch (error) {
-    next(error);
-  }
-};
 export const getProjectTasks: RequestHandler = async (req, res, next) => {
   const { id } = req.params;
   try {

@@ -21,6 +21,4 @@ export interface Team {
   updatedAt: string;
 }
 export const team = prisma.team;
-export const projectTeamAssociation = prisma.projectTeamAssociation;
-export const projectMemeberAssociation = prisma.projectMemberAssociation;
 export const teamMember = prisma.teamMember;
