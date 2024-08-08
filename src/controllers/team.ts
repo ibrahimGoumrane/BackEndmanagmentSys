@@ -8,7 +8,7 @@ import {
   TeamCreation,
 } from "../models/team";
 import createHttpError from "http-errors";
-import { user } from "../models/user";
+import { User, user } from "../models/user";
 
 export const getTeams: RequestHandler = async (req, res, next) => {
   const { query } = req.query;
@@ -88,7 +88,12 @@ export const getUserTeam: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
-export const getTeamMembers: RequestHandler = async (req, res, next) => {
+export const getTeamMembers: RequestHandler<
+  TeamDeletion,
+  unknown,
+  User,
+  unknown
+> = async (req, res, next) => {
   const { id } = req.params;
   try {
     const userTeams = await teamMember.findMany({
@@ -143,14 +148,18 @@ export const createTeam: RequestHandler<
 export const addUserTeam: RequestHandler<
   TeamDeletion,
   unknown,
-  Team,
+  User,
   unknown
 > = async (req, res, next) => {
   const { userId } = req.session;
   const { id } = req.params;
+  const NewuserId = req.body.id;
   try {
-    if (!userId || !id) {
+    if (!NewuserId || !id) {
       throw createHttpError(400, "User ID and Team ID are required");
+    }
+    if (!userId) {
+      throw createHttpError(401, "User not authenticated");
     }
     const teamExsist = await team.findFirst({
       where: {
@@ -162,7 +171,7 @@ export const addUserTeam: RequestHandler<
     }
     const userExsist = await user.findFirst({
       where: {
-        id: userId,
+        id: +NewuserId,
       },
     });
     if (!userExsist) {
@@ -171,7 +180,7 @@ export const addUserTeam: RequestHandler<
 
     const userTeamExsist = await teamMember.findFirst({
       where: {
-        userId,
+        userId: +NewuserId,
         teamId: Number(id),
       },
     });
@@ -180,11 +189,14 @@ export const addUserTeam: RequestHandler<
     }
     const newUserTeam = await teamMember.create({
       data: {
-        userId: userId,
+        userId: +NewuserId,
         teamId: Number(id),
       },
     });
-    res.status(201).json(newUserTeam);
+    if (newUserTeam) {
+      throw createHttpError(400, "An error occured during user creation");
+    }
+    return next();
   } catch (error) {
     next(error);
   }
@@ -215,6 +227,37 @@ export const updateTeam: RequestHandler<
       },
     });
     res.status(200).json(newTeam);
+  } catch (error) {
+    next(error);
+  }
+};
+export const deleteTeamMember: RequestHandler<
+  TeamDeletion,
+  unknown,
+  User,
+  unknown
+> = async (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.body.id;
+  try {
+    const teamUserBound = await teamMember.findFirst({
+      where: {
+        id: Number(id),
+        userId: +userId,
+      },
+    });
+    if (!teamUserBound) {
+      throw createHttpError(404, "User not in the team or team not found");
+    }
+    await teamMember.delete({
+      where: {
+        id: +id,
+        userId: +userId,
+      },
+    });
+    return next();
+
+    res.status(200).json({ message: "Team User Bound deleted" });
   } catch (error) {
     next(error);
   }

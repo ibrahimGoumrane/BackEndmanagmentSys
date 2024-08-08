@@ -2,7 +2,7 @@ import { RequestHandler } from "express";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { comment, commentId } from "../models/comment";
-import { Team, team, TeamDeletion } from "../models/team";
+import { team, TeamDeletion } from "../models/team";
 
 const requiresAuth: RequestHandler<unknown, unknown, unknown, unknown> = (
   req,
@@ -69,17 +69,17 @@ export const UserAutorisation: RequestHandler<
 export const checkAuth: RequestHandler<
   TeamDeletion,
   unknown,
-  Team,
+  unknown,
   unknown
 > = async (req, res, next) => {
   const { userId } = req.session;
   const { id } = req.params;
-  const ownerId = await team.findFirst({
+  const teamObj = await team.findFirst({
     where: {
       id: Number(id),
     },
   });
-  if (ownerId?.ownerId == userId) {
+  if (teamObj?.ownerId == userId) {
     return next();
   } else {
     return next(

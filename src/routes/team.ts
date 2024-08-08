@@ -10,8 +10,9 @@ router.get("/project/:id", TeamController.getProjectTeam);
 router.get("/user/:id", TeamController.getUserTeam);
 router.get("/members/:id", TeamController.getTeamMembers);
 router.post("/createTeam", team, checkError, TeamController.createTeam);
-router.post("/:id", checkAuth, TeamController.addUserTeam);
+router.post("/:id", checkAuth, TeamController.addUserTeam, TeamController.getTeamMembers);
 router.put("/:id", checkAuth, TeamController.updateTeam);
+router.delete("/members/:id", checkAuth, TeamController.deleteTeamMember, TeamController.getTeamMembers);
 router.delete("/:id", checkAuth, TeamController.deleteTeam);
 
 export default router;
