@@ -30,6 +30,31 @@ export const getTeams: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const getTeamByUserId: RequestHandler<
+  TeamDeletion,
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const teamData = await teamMember.findMany({
+      where: {
+        userId: Number(id),
+      },
+      select: {
+        team: true,
+      },
+    });
+    if (!teamData) {
+      throw createHttpError(404, "This user is not envolved in any team");
+    }
+    const Teams = teamData.map((team) => team.team);
+    res.status(200).json(Teams);
+  } catch (error) {
+    next(error);
+  }
+};
 export const getTeam: RequestHandler<
   TeamDeletion,
   unknown,
@@ -139,7 +164,12 @@ export const createTeam: RequestHandler<
         ownerId: userId,
       },
     });
-
+    await teamMember.create({
+      data: {
+        userId,
+        teamId: newTeam.id,
+      },
+    });
     res.status(201).json(newTeam);
   } catch (error) {
     next(error);
