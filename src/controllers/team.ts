@@ -9,21 +9,29 @@ import {
 import createHttpError from "http-errors";
 import { User, user } from "../models/user";
 
-export const getTeams: RequestHandler = async (req, res, next) => {
-  const { query } = req.query;
-  if (typeof query !== "string") {
-    return res.status(400).json({ message: "Invalid query" });
+export const getTeams: RequestHandler<
+  unknown,
+  unknown,
+  unknown,
+  { name: string }
+> = async (req, res, next) => {
+  const { name } = req.query;
+  if (typeof name !== "string") {
+    return res.status(400).json({ message: "Invalid name" });
   }
   try {
     const teams = await team.findMany({
       where: {
         name: {
-          contains: query,
+          contains: name,
         },
       },
       take: 10,
+      orderBy: {
+        name: "asc",
+      },
     });
-    res.status(200).json({ teams });
+    res.status(200).json(teams);
   } catch (error) {
     next(error);
   }
@@ -68,6 +76,46 @@ export const getTeam: RequestHandler<
       },
     });
     res.status(200).json(teamData);
+  } catch (error) {
+    next(error);
+  }
+};
+export const getTeamData: RequestHandler<
+  TeamDeletion,
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const teamData = await team.findFirst({
+      where: {
+        id: Number(id),
+      },
+      select: {
+        owner: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        name: true,
+        id: true,
+      },
+    });
+    const teamMembers = await team.findMany({
+      where: {
+        id: Number(id),
+      },
+    });
+    const returnedData = {
+      id: teamData?.id,
+      name: teamData?.name,
+      ownerName: teamData?.owner.name,
+      ownerEmail: teamData?.owner.email,
+      members: teamMembers,
+    };
+    res.status(200).json(returnedData);
   } catch (error) {
     next(error);
   }
