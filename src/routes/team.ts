@@ -10,6 +10,9 @@ router.get("/data/:id", TeamController.getTeamData);
 router.get("/:id", TeamController.getTeam);
 router.get("/user/:id", TeamController.getUserTeam);
 router.get("/members/:id", TeamController.getTeamMembers);
+router.get("/requestJoin/response", TeamController.handleReponseRequestJoin);
+router.post("/requestJoin", TeamController.requestJoin);
+router.post("/requestJoin", TeamController.requestJoin);
 router.post("/createTeam", team, checkError, TeamController.createTeam);
 router.post(
   "/:id",

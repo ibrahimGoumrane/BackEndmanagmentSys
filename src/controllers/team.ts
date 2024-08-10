@@ -5,10 +5,17 @@ import {
   TeamDeletion,
   Team,
   TeamCreation,
+  TeamData,
+  ResponseToJoin,
 } from "../models/team";
 import createHttpError from "http-errors";
-import { User, user } from "../models/user";
-
+import { user, User } from "../models/user";
+import emailSender from "../middleware/emailHandler/emailSender";
+import {
+  acceptanceEmail,
+  emailTemplate,
+  rejectionEmail,
+} from "../middleware/emailTemplates/teamEmail";
 export const getTeams: RequestHandler<
   unknown,
   unknown,
@@ -165,6 +172,116 @@ export const getTeamMembers: RequestHandler<
     next(error);
   }
 };
+export const requestJoin: RequestHandler<
+  unknown,
+  unknown,
+  TeamData,
+  unknown
+> = async (req, res, next) => {
+  const { name, id, ownerEmail } = req.body;
+  const { userId } = req.session;
+  try {
+    const NewUser = await user.findFirst({
+      where: {
+        id: userId,
+      },
+    });
+    if (!NewUser) {
+      throw createHttpError(401, "User not authenticated");
+    }
+
+    //Sending the email
+
+    const mailData = {
+      from: NewUser.email, // Who is sending the letter
+      to: ownerEmail, // Who is receiving the letter
+      subject: "Request TO Join YOur Group Chat : " + name, // The title of the letter
+      text: "That was easy!", // The simple message inside the letter
+      html: emailTemplate(NewUser.id.toString(), id.toString()), // A fancy message inside the letter with bold text
+    };
+    emailSender(mailData)
+      .then((info) => {
+        console.log(info);
+        res.status(200).json({ message: "Email sent successfully" });
+      })
+      .catch((error) => {
+        next(error);
+      });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const handleReponseRequestJoin: RequestHandler<
+  unknown,
+  unknown,
+  unknown,
+  ResponseToJoin
+> = async (req, res, next) => {
+  const { teamId, userId, status } = req.query;
+  try {
+    const NewUser = await user.findFirst({
+      where: {
+        id: +userId,
+      },
+    });
+    if (!NewUser) {
+      throw createHttpError(401, "User not authenticated");
+    }
+    const teamObj = await team.findFirst({
+      where: {
+        id: +teamId,
+      },
+    });
+
+    let html;
+    if (status === "ACCEPTED") {
+      const teamLink = await teamMember.create({
+        data: {
+          userId: +userId,
+          teamId: +teamId,
+        },
+      });
+      if (!teamLink) {
+        return setTimeout(() => {
+          res
+            .status(400)
+            .send(
+              `<h1>There was an error while trying to add the user to the team</h1>`
+            );
+        }, 1000);
+      }
+      html = acceptanceEmail(NewUser.name); // A fancy message inside the letter with bold text
+    } else {
+      html = rejectionEmail(NewUser.name); // A fancy message inside the letter with bold text
+    }
+    const mailData = {
+      from: "goumrane.ibrahim@ensam-casa.ma", // Who is sending the letter
+      to: NewUser?.email, // Who is receiving the letter
+      subject:
+        "Response of Your Request To Join the groupe Chat : " + teamObj?.name, // The title of the letter
+      text: "That was easy!", // The simple message inside the letter
+      html, // A fancy message inside the letter with bold text
+    };
+    emailSender(mailData)
+      .then((info) => {
+        console.log(info);
+      })
+      .catch((error) => {
+        next(error);
+      });
+    res
+      .status(200)
+      .send(
+        `<h1>Your response has been registered successfully. The user has been ${
+          status === "ACCEPTED" ? "ACCEPTED" : "REJECTED"
+        }</h1>`
+      );
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createTeam: RequestHandler<
   unknown,
   unknown,

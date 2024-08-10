@@ -13,7 +13,6 @@ import statusRoute from "./routes/status";
 import projectRoute from "./routes/project";
 import commentRoute from "./routes/comment";
 import activityRoute from "./routes/activity";
-
 import env from "./util/validateEnv";
 
 const app = express();
