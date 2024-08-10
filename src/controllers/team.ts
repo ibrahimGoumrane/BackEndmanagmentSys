@@ -29,13 +29,20 @@ export const getTeams: RequestHandler<
   try {
     const teams = await team.findMany({
       where: {
-        name: {
-          contains: name,
+      name: {
+        contains: name,
+      },
+      NOT: {
+        members: {
+        some: {
+          userId: Number(req.session.userId),
+        },
         },
       },
-      take: 10,
+      },
+      take: 30,
       orderBy: {
-        name: "asc",
+      name: "asc",
       },
     });
     res.status(200).json(teams);

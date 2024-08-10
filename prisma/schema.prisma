@@ -24,7 +24,10 @@ model User {
   tasksAssigne              Task[]                     @relation("TaskAssignee")
   tasksCreator              Task[]                     @relation("TaskCreator")
   UserSkill                 UserSkill[]
-  teams                      Team[]
+  teams                     Team[]
+  teamChats                 TeamChat[] // Relation to the TeamChat model
+  sentMessages              UserChat[] @relation("UserChatSender")  // Sent messages in UserChat
+  receivedMessages          UserChat[] @relation("UserChatReceiver") // Received messages in UserChat
 
   @@index([name]) // Index on name
   @@index([email]) // Index on email
@@ -152,6 +155,7 @@ model Team {
   members                TeamMember[]
   ownerId                Int
   owner                  User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  chats     TeamChat[] // Relation to the TeamChat model
 
   @@index([name]) // Index on name
 }
@@ -195,3 +199,40 @@ model UserSkill {
   @@index([userId])
   @@index([skillId])
 }
+
+
+model TeamChat {
+  id        Int      @id @default(autoincrement())
+  teamId    Int
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  attachments Attachment[]
+}
+model UserChat {
+  id          Int      @id @default(autoincrement())
+  senderId    Int
+  sender      User     @relation("UserChatSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId  Int
+  receiver    User     @relation("UserChatReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  message     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  attachments Attachment[]
+}
+
+model Attachment {
+  id         Int       @id @default(autoincrement())
+  fileName   String
+  filePath   String
+  teamChatId Int?     
+  userChatId Int?    
+  teamChat   TeamChat? @relation(fields: [teamChatId], references: [id], onDelete: Cascade)
+  userChat   UserChat? @relation(fields: [userChatId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+

@@ -13,6 +13,7 @@ import statusRoute from "./routes/status";
 import projectRoute from "./routes/project";
 import commentRoute from "./routes/comment";
 import activityRoute from "./routes/activity";
+import chatRoute from "./routes/chat";
 import env from "./util/validateEnv";
 
 const app = express();
@@ -54,6 +55,7 @@ app.use("/api/status", statusRoute);
 app.use("/api/projects", requiresAuth, projectRoute);
 app.use("/api/comments", requiresAuth, commentRoute);
 app.use("/api/activity", requiresAuth, activityRoute);
+app.use("/api/chat", requiresAuth, chatRoute);
 
 // Catches any URL that has no related route handler
 app.use((req, res, next) => {
