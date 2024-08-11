@@ -4,6 +4,7 @@ export interface TChat {
   id: string;
   teamId: string;
   userId: string;
+  userName: string;
   message: string;
   createdAt: Date;
   updatedAt: Date;
@@ -11,7 +12,9 @@ export interface TChat {
 export interface UChat {
   id: string;
   senderId: string;
+  senderName: string;
   receiverId: string;
+  receiverName: string;
   message: string;
   createdAt: Date;
   updatedAt: Date;

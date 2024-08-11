@@ -25,9 +25,22 @@ export const getTeamChat: RequestHandler<
     const teamChats = await TeamChat.findMany({
       where: { teamId: Number(teamId) },
       orderBy: { createdAt: "asc" },
+      include: {
+        user: true,
+      },
     });
-
-    res.status(200).json(teamChats);
+    const returnedData = teamChats.map((chat) => {
+      return {
+        id: chat.id,
+        teamId: chat.teamId,
+        userId: chat.userId,
+        userName: chat.user.name,
+        message: chat.message,
+        createdAt: chat.createdAt,
+        updatedAt: chat.updatedAt,
+      };
+    });
+    res.status(200).json(returnedData);
   } catch (error) {
     next(error);
   }
@@ -53,9 +66,24 @@ export const getUserChat: RequestHandler<
         ],
       },
       orderBy: { createdAt: "asc" },
+      include: {
+        sender: true,
+        receiver: true,
+      },
     });
-
-    res.status(200).json(userChats);
+    const returnedData = userChats.map((chat) => {
+      return {
+        id: chat.id,
+        senderId: chat.senderId,
+        senderName: chat.sender.name,
+        receiverId: chat.receiverId,
+        receiverName: chat.receiver.name,
+        message: chat.message,
+        createdAt: chat.createdAt,
+        updatedAt: chat.updatedAt,
+      };
+    });
+    res.status(200).json(returnedData);
   } catch (error) {
     next(error);
   }
