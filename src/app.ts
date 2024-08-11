@@ -15,9 +15,9 @@ import commentRoute from "./routes/comment";
 import activityRoute from "./routes/activity";
 import chatRoute from "./routes/chat";
 import env from "./util/validateEnv";
-
+import { setupSocketServer } from "./Sockets/socketServer";
 const app = express();
-const server = http.createServer(app);
+export const server = http.createServer(app);
 
 // Define CORS options
 const corsOptions = {
@@ -25,6 +25,8 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Ensure OPTIONS is included
   credentials: true,
 };
+
+setupSocketServer(server, corsOptions);
 
 // Apply CORS middleware with options
 app.use(cors(corsOptions));
