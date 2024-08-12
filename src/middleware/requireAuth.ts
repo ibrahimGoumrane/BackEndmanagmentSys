@@ -2,7 +2,6 @@ import { RequestHandler } from "express";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { comment, commentId } from "../models/comment";
-import { team, TeamDeletion } from "../models/team";
 
 const requiresAuth: RequestHandler<unknown, unknown, unknown, unknown> = (
   req,
@@ -64,26 +63,5 @@ export const UserAutorisation: RequestHandler<
     }
   } catch (error) {
     next(error);
-  }
-};
-export const checkAuth: RequestHandler<
-  TeamDeletion,
-  unknown,
-  unknown,
-  unknown
-> = async (req, res, next) => {
-  const { userId } = req.session;
-  const { id } = req.params;
-  const teamObj = await team.findFirst({
-    where: {
-      id: Number(id),
-    },
-  });
-  if (teamObj?.ownerId == userId) {
-    return next();
-  } else {
-    return next(
-      createHttpError(401, "You are not authorized to perform this action")
-    );
   }
 };

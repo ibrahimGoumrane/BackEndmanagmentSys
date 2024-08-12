@@ -1,7 +1,9 @@
 import { Router } from "express";
 import * as TeamController from "../controllers/team";
-import { checkAuth, checkError } from "../middleware/requireAuth";
+import {  checkError } from "../middleware/requireAuth";
 import { team } from "../util/validators/validateData";
+import checkAuthorization from "../middleware/autorisationMidlwares/isAuthorised";
+import { Action, ModuleType } from "@prisma/client";
 const router = Router();
 
 router.get("/", TeamController.getTeams);
@@ -12,21 +14,30 @@ router.get("/user/:id", TeamController.getUserTeam);
 router.get("/members/:id", TeamController.getTeamMembers);
 router.get("/requestJoin/response", TeamController.handleReponseRequestJoin);
 router.post("/requestJoin", TeamController.requestJoin);
-router.post("/requestJoin", TeamController.requestJoin);
 router.post("/createTeam", team, checkError, TeamController.createTeam);
+
+
 router.post(
   "/:id",
-  checkAuth,
+  checkAuthorization(ModuleType.TEAM, Action.UPDATE),
   TeamController.addUserTeam,
   TeamController.getTeamMembers
 );
-router.put("/:id", checkAuth, TeamController.updateTeam);
+router.put(
+  "/:id",
+  checkAuthorization(ModuleType.TEAM, Action.UPDATE),
+  TeamController.updateTeam
+);
 router.delete(
   "/members/:id",
-  checkAuth,
+  checkAuthorization(ModuleType.TEAM, Action.DELETE),
   TeamController.deleteTeamMember,
   TeamController.getTeamMembers
 );
-router.delete("/:id", checkAuth, TeamController.deleteTeam);
+router.delete(
+  "/:id",
+  checkAuthorization(ModuleType.TEAM, Action.DELETE),
+  TeamController.deleteTeam
+);
 
 export default router;

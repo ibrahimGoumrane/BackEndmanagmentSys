@@ -3,6 +3,8 @@ import { Router } from "express";
 import * as ProjectController from "../controllers/project";
 import { validateCreateProject } from "../util/validators/validateData";
 import { checkError } from "../middleware/requireAuth";
+import checkAuthorization from "../middleware/autorisationMidlwares/isAuthorised";
+import { Action, ModuleType } from "@prisma/client";
 
 const router = Router();
 
@@ -20,12 +22,17 @@ router.post(
   checkError,
   ProjectController.createProject
 );
-router.put("/user/:id", ProjectController.updateProjectMembers);
+router.put("/user/:id", checkAuthorization(ModuleType.PROJECT, Action.UPDATE), ProjectController.updateProjectMembers);
 router.put(
   "/:id",
+  checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
   ProjectController.updateProject,
   ProjectController.createProject
 );
-router.delete("/:id", ProjectController.deleteProject);
+router.delete(
+  "/:id",
+  checkAuthorization(ModuleType.PROJECT, Action.DELETE),
+  ProjectController.deleteProject
+);
 
 export default router;
