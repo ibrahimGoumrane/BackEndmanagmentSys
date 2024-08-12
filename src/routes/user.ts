@@ -14,7 +14,6 @@ router.post("/logout", UserController.logout);
 router.put("/", requiresAuth, UserController.updateUser);
 router.put("/skills/", UserController.updateUserSkills);
 router.put("/teams/", UserController.updateUserTeams);
-
 router.delete("/:id", UserController.deleteUser);
 
 export default router;
