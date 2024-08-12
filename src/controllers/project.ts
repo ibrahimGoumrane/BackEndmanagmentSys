@@ -7,6 +7,7 @@ import {
   ProjectUpdate,
   project,
   projectMemeberAssociation,
+  getProjectData,
 } from "../models/project";
 import { User, user } from "../models/user";
 
@@ -41,11 +42,28 @@ export const getProject: RequestHandler = async (req, res, next) => {
       where: {
         id: Number(id),
       },
+      include: {
+        Manager: true,
+        status: true,
+      },
     });
     if (!returnedProj) {
       throw createHttpError(404, "Project not found");
     }
-    res.status(200).json(returnedProj);
+
+    const returnedData: getProjectData = {
+      id: returnedProj.id,
+      name: returnedProj.name,
+      description: returnedProj.description,
+      startDate: returnedProj.startDate.toISOString(),
+      endDate: returnedProj.endDate?.toISOString() || "",
+      ManagerName: returnedProj.Manager.name,
+      statusName: returnedProj.status?.name || "initiated",
+      createdAt: returnedProj.createdAt.toISOString(),
+      updatedAt: returnedProj.updatedAt.toISOString(),
+    };
+
+    res.status(200).json(returnedData);
   } catch (error) {
     next(error);
   }

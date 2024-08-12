@@ -13,7 +13,17 @@ export interface ProjectUpdate {
   ManagerId?: number;
   statusId?: number;
 }
-
+export interface getProjectData {
+  id: number;
+  name: string;
+  startDate: string;
+  ManagerName: string;
+  description: string;
+  statusName: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
 export interface ProjectModifDelete {
   id?: number;
 }

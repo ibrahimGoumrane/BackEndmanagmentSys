@@ -28,10 +28,36 @@ model User {
   teamChats                 TeamChat[] // Relation to the TeamChat model
   sentMessages              UserChat[] @relation("UserChatSender")  // Sent messages in UserChat
   receivedMessages          UserChat[] @relation("UserChatReceiver") // Received messages in UserChat
+  authorizations Authorization[]
 
   @@index([name]) // Index on name
   @@index([email]) // Index on email
   @@index([password])
+}
+
+model Authorization {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  moduleId   Int
+  moduleType ModuleType
+  action     Action
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([moduleId, moduleType])
+}
+
+enum ModuleType {
+  TASK
+  PROJECT
+  TEAM
+}
+
+enum Action {
+  DELETE
+  UPDATE
+  CREATE
 }
 
 // Status model
