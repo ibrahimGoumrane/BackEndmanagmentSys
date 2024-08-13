@@ -5,7 +5,10 @@ import { team } from "../util/validators/validateData";
 import checkAuthorization from "../middleware/autorisationMidlwares/isAuthorised";
 import giveAuth from "../middleware/autorisationMidlwares/giveAuth";
 import { Action, ModuleType } from "@prisma/client";
-import { deleteAuth, updateAuth } from "../middleware/autorisationMidlwares/extendAuth";
+import {
+  deleteAuth,
+  updateAuth,
+} from "../middleware/autorisationMidlwares/extendAuth";
 const router = Router();
 
 //evryone can do them
@@ -23,9 +26,10 @@ router.post(
   "/createTeam",
   team,
   checkError,
+  TeamController.createTeam,
   giveAuth(ModuleType.TEAM, Action.UPDATE),
   giveAuth(ModuleType.TEAM, Action.DELETE),
-  TeamController.createTeam
+  TeamController.getTeam
 );
 
 //give auth dynamique
@@ -40,7 +44,6 @@ router.delete(
   checkAuthorization(ModuleType.TEAM, Action.DELETE),
   deleteAuth()
 );
-
 
 //auth needed
 router.post(

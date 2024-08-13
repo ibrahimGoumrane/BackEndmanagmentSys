@@ -1,13 +1,14 @@
 import { RequestHandler } from "express";
-import { Autorisation, ExtendedQuery } from "../../models/autorisation";
+import { Autorisation, Params } from "../../models/autorisation";
 import { Action, ModuleType } from "@prisma/client";
 
 const giveAuth = (
   moduleType: ModuleType,
   action: Action
-): RequestHandler<unknown, unknown, unknown, ExtendedQuery> => {
+): RequestHandler<Params, unknown, unknown, unknown> => {
   return async (req, res, next) => {
-    const { userId, moduleId } = req.query; // Assuming userId is stored in the session
+    const { userId } = req.session;
+    const { id: moduleId } = req.params; // Assuming userId is stored in the session
     if (!userId) {
       return res.status(401).json({
         message: "User not authenticated or no " + moduleType + " Provided",

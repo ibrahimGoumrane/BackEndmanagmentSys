@@ -16,6 +16,7 @@ import {
   emailTemplate,
   rejectionEmail,
 } from "../middleware/emailTemplates/teamEmail";
+import { Params } from "../models/autorisation";
 export const getTeams: RequestHandler<
   unknown,
   unknown,
@@ -29,20 +30,20 @@ export const getTeams: RequestHandler<
   try {
     const teams = await team.findMany({
       where: {
-      name: {
-        contains: name,
-      },
-      NOT: {
-        members: {
-        some: {
-          userId: Number(req.session.userId),
+        name: {
+          contains: name,
         },
+        NOT: {
+          members: {
+            some: {
+              userId: Number(req.session.userId),
+            },
+          },
         },
-      },
       },
       take: 30,
       orderBy: {
-      name: "asc",
+        name: "asc",
       },
     });
     res.status(200).json(teams);
@@ -290,7 +291,7 @@ export const handleReponseRequestJoin: RequestHandler<
 };
 
 export const createTeam: RequestHandler<
-  unknown,
+  Params,
   unknown,
   TeamCreation,
   unknown
@@ -321,7 +322,8 @@ export const createTeam: RequestHandler<
         teamId: newTeam.id,
       },
     });
-    res.status(201).json(newTeam);
+    req.params.id = newTeam.id;
+    next();
   } catch (error) {
     next(error);
   }
@@ -420,6 +422,9 @@ export const deleteTeamMember: RequestHandler<
 > = async (req, res, next) => {
   const { id } = req.params;
   const userId = req.body.id;
+  if (!id) {
+    throw createHttpError(400, "Team ID is required");
+  }
   try {
     const teamUserBound = await teamMember.findFirst({
       where: {

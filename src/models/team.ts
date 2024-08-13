@@ -11,7 +11,7 @@ export interface TeamModification {
 }
 
 export interface TeamDeletion {
-  id: number;
+  id?: number;
 }
 
 export interface Team {

@@ -21,19 +21,20 @@ router.get("/user/:id", ProjectController.getProjectMembers);
 router.get("/status/:id", ProjectController.getProjectStatus);
 router.get("/task/:id", ProjectController.getProjectTasks);
 router.get("/comment/:id", ProjectController.getProjectActivity);
-router.get("/:id", ProjectController.getProject);
+router.get("/:id", ProjectController.getProjectInfo);
 
 //here we give the auth to the creator
 router.post(
   "/",
   validateCreateProject,
   checkError,
+  ProjectController.createProject,
   giveAuth(ModuleType.PROJECT, Action.UPDATE),
   giveAuth(ModuleType.PROJECT, Action.DELETE),
   giveAuth(ModuleType.TASKMANAGER, Action.CREATE),
   giveAuth(ModuleType.TASKMANAGER, Action.UPDATE),
   giveAuth(ModuleType.TASKMANAGER, Action.DELETE),
-  ProjectController.createProject
+  ProjectController.getProject
 );
 //////////////here we permit the auth to be dynamique
 //Project Authorisation

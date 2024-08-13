@@ -34,8 +34,7 @@ export const getProjects: RequestHandler<
     next(error);
   }
 };
-
-export const getProject: RequestHandler = async (req, res, next) => {
+export const getProjectInfo: RequestHandler = async (req, res, next) => {
   const { id } = req.params;
   try {
     const returnedProj = await project.findFirst({
@@ -64,6 +63,23 @@ export const getProject: RequestHandler = async (req, res, next) => {
     };
 
     res.status(200).json(returnedData);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProject: RequestHandler = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const returnedProj = await project.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+    if (!returnedProj) {
+      throw createHttpError(404, "Project not found");
+    }
+    res.status(200).json(returnedProj);
   } catch (error) {
     next(error);
   }
@@ -98,7 +114,8 @@ export const createProject: RequestHandler<
     if (!projectModal) {
       throw createHttpError(400, "Please provide all the required fields");
     }
-    res.status(200).json(projectModal);
+    req.params.id = projectModal.id;
+    next();
   } catch (error) {
     next(error);
   }

@@ -20,12 +20,12 @@ router.delete("/user", TaskController.deleteUserTasks);
 
 //here we give permission dynamically
 router.post(
-  "/auth/task",
+  "/auth",
   checkAuthorization(ModuleType.TASKMANAGER, Action.CREATE),
   extendAuth(ModuleType.TASK, Action.CREATE)
 );
 router.put(
-  "/auth/task",
+  "/auth",
   checkAuthorization(ModuleType.TASKMANAGER, Action.UPDATE),
   updateAuth(ModuleType.TASK, Action.UPDATE)
 );

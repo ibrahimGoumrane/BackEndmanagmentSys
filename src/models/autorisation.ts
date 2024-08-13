@@ -14,18 +14,19 @@ export interface autorisationModelInputs {
   userId: string;
   moduleId: string;
 }
-export interface updateDeleteAuth{
+export interface updateDeleteAuth {
   id: string;
   userId: string;
   moduleId: string;
-  moduleType: string;
-  action: string;
 }
 // Define your extended query type
 export interface ExtendedQuery extends ParsedQs {
   moduleId?: string; // Or use the appropriate type if it's a number
   userId?: string; // Or use the appropriate type if it's a number
   projectId?: string;
+}
+export interface Params {
+  id?: number;
 }
 
 export const Autorisation = prisma.authorization;
