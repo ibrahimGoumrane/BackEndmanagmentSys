@@ -14,6 +14,7 @@ export interface autorisationModel {
 // Define your extended query type
 export interface ExtendedQuery extends ParsedQs {
   moduleId?: string; // Or use the appropriate type if it's a number
+  userId?: string; // Or use the appropriate type if it's a number
 }
 
 export const Autorisation = prisma.authorization;

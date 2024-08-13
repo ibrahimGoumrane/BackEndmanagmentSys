@@ -34,9 +34,11 @@ const checkAuthorization = (
       }
     } catch (error) {
       console.error("Authorization check failed:", error);
-      return res.status(500).json({ message: "Internal Server Error" });
+      next(error);
     }
   };
 };
+
+
 
 export default checkAuthorization;
