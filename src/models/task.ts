@@ -38,4 +38,6 @@ export interface task {
   updatedAt: string;
   creatorId: number;
 }
+
+
 export default prisma.task;

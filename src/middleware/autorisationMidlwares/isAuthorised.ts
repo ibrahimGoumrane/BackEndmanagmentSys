@@ -8,14 +8,32 @@ const checkAuthorization = (
 ): RequestHandler<unknown, unknown, unknown, ExtendedQuery> => {
   return async (req, res, next) => {
     const { userId } = req.session; // Assuming userId is stored in the session
-    const { moduleId } = req.query; // Assuming the module ID is in the request params
+    const { moduleId, projectId } = req.query; // Assuming the module ID is in the request params
 
     if (!userId) {
       return res.status(401).json({ message: "User not authenticated" });
     }
+    if (!moduleId) {
+      return res.status(401).json({
+        message: "No " + moduleType + " Provided",
+      });
+    }
 
     try {
-      if (!moduleId) return next(); // User is authorized, proceed to the next middleware/controller
+      if (projectId && ModuleType.TASK) {
+        const authorization = await Autorisation.findFirst({
+          where: {
+            userId,
+            moduleId: +projectId,
+            moduleType: ModuleType.TASKMANAGER,
+            action,
+          },
+        });
+
+        if (authorization) {
+          return next();
+        }
+      }
 
       const authorization = await Autorisation.findFirst({
         where: {
@@ -32,13 +50,12 @@ const checkAuthorization = (
             "Forbidden: You do not have permission to perform this action",
         });
       }
+      return next();
     } catch (error) {
       console.error("Authorization check failed:", error);
       next(error);
     }
   };
 };
-
-
 
 export default checkAuthorization;
