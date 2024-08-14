@@ -37,33 +37,29 @@ export const extendAuth = (
     const { userId, moduleId } = req.body;
 
     // Call the checkData middleware function
-    checkData({ userId, moduleId })(
-      req,
-      res,
-      async (err) => {
-        if (err) return next(err);
+    checkData({ userId, moduleId })(req, res, async (err) => {
+      if (err) return next(err);
 
-        try {
-          const newAuthorisation = await Autorisation.create({
-            data: {
-              userId: +userId,
-              moduleId: +moduleId,
-              moduleType,
-              action,
-            },
-          });
-          if (!newAuthorisation) {
-            return next({ message: "Failed to give authorisation" });
-          }
-          return res.status(200).json({
-            message: "Authorisation given successfully",
-          });
-        } catch (error) {
-          console.error("Authorization check failed:", error);
-          next(error);
+      try {
+        const newAuthorisation = await Autorisation.create({
+          data: {
+            userId: +userId,
+            moduleId: +moduleId,
+            moduleType,
+            action,
+          },
+        });
+        if (!newAuthorisation) {
+          return next({ message: "Failed to give authorisation" });
         }
+        return res.status(200).json({
+          message: "Authorisation given successfully",
+        });
+      } catch (error) {
+        console.error("Authorization check failed:", error);
+        next(error);
       }
-    );
+    });
   };
 };
 export const updateAuth = (
@@ -105,8 +101,12 @@ export const updateAuth = (
   };
 };
 
-export const deleteAuth = (
-): RequestHandler<unknown, unknown, updateDeleteAuth, unknown> => {
+export const deleteAuth = (): RequestHandler<
+  unknown,
+  unknown,
+  updateDeleteAuth,
+  unknown
+> => {
   return async (req, res, next) => {
     const { id } = req.body;
     try {
@@ -122,6 +122,8 @@ export const deleteAuth = (
 
       return res.status(200).json({
         message: "Authorization deleted successfully",
+
+        deletedAuth,
       });
     } catch (error) {
       console.error("Authorization delete failed:", error);

@@ -1,15 +1,8 @@
 import { PrismaClient, ModuleType, Action } from "@prisma/client";
 import { ParsedQs } from "qs";
+import { Member } from "./user";
 
 const prisma = new PrismaClient();
-export interface autorisationModel {
-  id: string;
-  userId: string;
-  moduleId: string;
-  moduleType: ModuleType;
-  action: Action;
-  createdAt: Date;
-}
 export interface autorisationModelInputs {
   userId: string;
   moduleId: string;
@@ -18,6 +11,15 @@ export interface updateDeleteAuth {
   id: string;
   userId: string;
   moduleId: string;
+}
+export interface autorisationModel extends Member {
+  auth: authorisation[];
+}
+export interface authorisation {
+  id: string;
+  moduleId: string;
+  moduleType: ModuleType;
+  action: Action;
 }
 // Define your extended query type
 export interface ExtendedQuery extends ParsedQs {

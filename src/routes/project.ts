@@ -16,13 +16,15 @@ const router = Router();
 
 //no auth needed to perform this actions
 router.get("/", ProjectController.getProjects);
+router.get('/requestJoin/response' ,ProjectController.handleReponseRequestJoin)
+router.get('/requestJoin/:id' ,ProjectController.requestToJoin)
 router.get("/user/", ProjectController.getUserProjects);
 router.get("/user/:id", ProjectController.getProjectMembers);
 router.get("/status/:id", ProjectController.getProjectStatus);
 router.get("/task/:id", ProjectController.getProjectTasks);
 router.get("/comment/:id", ProjectController.getProjectActivity);
+router.get('/auth' , ProjectController.getProjectAuth)
 router.get("/:id", ProjectController.getProjectInfo);
-
 //here we give the auth to the creator
 router.post(
   "/",
@@ -68,7 +70,7 @@ router.delete(
 
 //checkAuth
 router.put(
-  "/user/:id",
+  "/user",
   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
   ProjectController.updateProjectMembers
 );

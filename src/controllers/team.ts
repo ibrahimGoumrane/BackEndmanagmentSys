@@ -12,9 +12,9 @@ import createHttpError from "http-errors";
 import { user, User } from "../models/user";
 import emailSender from "../middleware/emailHandler/emailSender";
 import {
-  acceptanceEmail,
-  emailTemplate,
-  rejectionEmail,
+  acceptanceRequestTeamEmail,
+  emailRequestTeamTemplate,
+  rejectionRequestTeamEmail,
 } from "../middleware/emailTemplates/teamEmail";
 import { Params } from "../models/autorisation";
 export const getTeams: RequestHandler<
@@ -205,11 +205,14 @@ export const requestJoin: RequestHandler<
       to: ownerEmail, // Who is receiving the letter
       subject: "Request TO Join YOur Group Chat : " + name, // The title of the letter
       text: "That was easy!", // The simple message inside the letter
-      html: emailTemplate(NewUser.id.toString(), id.toString()), // A fancy message inside the letter with bold text
+      html: emailRequestTeamTemplate(
+        NewUser.id.toString(),
+        id.toString(),
+        NewUser.name
+      ), // A fancy message inside the letter with bold text
     };
     emailSender(mailData)
-      .then((info) => {
-        console.log(info);
+      .then(() => {
         res.status(200).json({ message: "Email sent successfully" });
       })
       .catch((error) => {
@@ -259,9 +262,9 @@ export const handleReponseRequestJoin: RequestHandler<
             );
         }, 1000);
       }
-      html = acceptanceEmail(NewUser.name); // A fancy message inside the letter with bold text
+      html = acceptanceRequestTeamEmail(NewUser.name); // A fancy message inside the letter with bold text
     } else {
-      html = rejectionEmail(NewUser.name); // A fancy message inside the letter with bold text
+      html = rejectionRequestTeamEmail(NewUser.name); // A fancy message inside the letter with bold text
     }
     const mailData = {
       from: "goumrane.ibrahim@ensam-casa.ma", // Who is sending the letter
@@ -272,19 +275,23 @@ export const handleReponseRequestJoin: RequestHandler<
       html, // A fancy message inside the letter with bold text
     };
     emailSender(mailData)
-      .then((info) => {
-        console.log(info);
-      })
+      .then(() => {})
       .catch((error) => {
         next(error);
       });
-    res
-      .status(200)
-      .send(
-        `<h1>Your response has been registered successfully. The user has been ${
-          status === "ACCEPTED" ? "ACCEPTED" : "REJECTED"
-        }</h1>`
-      );
+    res.status(200).send(
+      `  <html>
+          <head>
+              <meta http-equiv="refresh" content="3;url=http://localhost:5173/home/" />
+          </head>
+          <body>
+            <h1>Your response has been registered successfully. The user has been ${
+              status === "ACCEPTED" ? "ACCEPTED" : "REJECTED"
+            }</h1>
+              <h1>Redirecting in 3 seconds...</h1>
+          </body>
+      </html>`
+    );
   } catch (error) {
     next(error);
   }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
 import { activity } from "../models/activity";
@@ -8,8 +9,23 @@ import {
   project,
   projectMemeberAssociation,
   getProjectData,
+  ResponseToJoin,
 } from "../models/project";
-import { User, user } from "../models/user";
+import { Member, user, User } from "../models/user";
+import {
+  acceptanceRequestTeamEmail,
+  emailRequestTeamTemplate,
+  rejectionRequestTeamEmail,
+} from "../middleware/emailTemplates/teamEmail";
+import emailSender from "../middleware/emailHandler/emailSender";
+import {
+  authorisation,
+  Autorisation,
+  autorisationModel,
+  autorisationModelInputs,
+  ExtendedQuery,
+} from "../models/autorisation";
+import { ModuleType } from "@prisma/client";
 
 export const getProjects: RequestHandler<
   unknown,
@@ -80,6 +96,213 @@ export const getProject: RequestHandler = async (req, res, next) => {
       throw createHttpError(404, "Project not found");
     }
     res.status(200).json(returnedProj);
+  } catch (error) {
+    next(error);
+  }
+};
+export const getProjectAuth: RequestHandler<
+  unknown,
+  unknown,
+  unknown,
+  autorisationModelInputs
+> = async (req, res, next) => {
+  const { userId, moduleId } = req.query;
+  try {
+    const projectAuth = await Autorisation.findMany({
+      where: {
+        AND: [
+          {
+            moduleId: Number(moduleId),
+            userId: Number(userId),
+          },
+          {
+            OR: [
+              {
+                moduleType: ModuleType.PROJECT,
+              },
+              {
+                moduleType: ModuleType.TASKMANAGER,
+              },
+            ],
+          },
+        ],
+      },
+      select: {
+        id: true,
+        moduleId: true,
+        moduleType: true,
+        action: true,
+        user: true,
+      },
+    });
+    if (!projectAuth || projectAuth.length === 0) {
+      const userObj = await user.findFirst({
+        where: {
+          id: Number(userId),
+        },
+      });
+      if (!userObj) {
+        throw createHttpError(404, "No user found");
+      }
+      const retunredData = {
+        ...userObj,
+        auth: [],
+      };
+      return res.status(200).json(retunredData);
+    }
+    const userObj = projectAuth[0].user;
+    if (!userObj) {
+      throw createHttpError(404, "No user found");
+    }
+    const auth: authorisation[] = projectAuth.map(({ user, ...au }) => {
+      // Add your logic here
+      return {
+        id: au.id.toString(),
+        moduleId: au.moduleId.toString(),
+        moduleType: au.moduleType,
+        action: au.action,
+      };
+    });
+    const retunredData = {
+      ...userObj,
+      auth: auth,
+    };
+    res.status(200).json(retunredData);
+  } catch (error) {
+    next(error);
+  }
+};
+export const requestToJoin: RequestHandler<
+  ProjectModifDelete,
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  const { userId } = req.session;
+  const { id } = req.params;
+  try {
+    const NewUser = await user.findFirst({
+      where: {
+        id: userId,
+      },
+    });
+    if (!NewUser) {
+      throw createHttpError(401, "User not authenticated");
+    }
+    if (!id) {
+      throw createHttpError(400, "Please provide the project Id");
+    }
+    const projectExist = await project.findFirst({
+      where: {
+        id: Number(id),
+      },
+      include: {
+        Manager: true,
+      },
+    });
+    if (!projectExist) {
+      throw createHttpError(404, "Project not found");
+    }
+
+    //Sending the email
+    const mailData = {
+      from: NewUser.email, // Who is sending the letter
+      to: projectExist.Manager.email, // Who is receiving the letter
+      subject: "Request TO Join YOur Project  : " + projectExist.name, // The title of the letter
+      text: "That was easy!", // The simple message inside the letter
+      html: emailRequestTeamTemplate(
+        NewUser.id.toString(),
+        id.toString(),
+        NewUser.name,
+        "project"
+      ),
+    };
+    emailSender(mailData)
+      .then(() => {
+        res.status(200).json({ message: "Email sent successfully" });
+      })
+      .catch((error) => {
+        next(error);
+      });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const handleReponseRequestJoin: RequestHandler<
+  unknown,
+  unknown,
+  unknown,
+  ResponseToJoin
+> = async (req, res, next) => {
+  const { projectId, userId, status } = req.query;
+  try {
+    const NewUser = await user.findFirst({
+      where: {
+        id: +userId,
+      },
+    });
+    if (!NewUser) {
+      throw createHttpError(401, "User not authenticated");
+    }
+    const projectObj = await project.findFirst({
+      where: {
+        id: +projectId,
+      },
+    });
+    if (!projectObj) {
+      throw createHttpError(404, "Project not found");
+    }
+    let html;
+    if (status === "ACCEPTED") {
+      const projectLink = await projectMemeberAssociation.create({
+        data: {
+          userId: +userId,
+          projectId: +projectId,
+        },
+      });
+      if (!projectLink) {
+        return setTimeout(() => {
+          res
+            .status(400)
+            .send(
+              `<h1>There was an error while trying to add the user to the team</h1>`
+            );
+        }, 1000);
+      }
+      html = acceptanceRequestTeamEmail(NewUser.name, "project");
+    } else {
+      html = rejectionRequestTeamEmail(NewUser.name, "project");
+    }
+    const mailData = {
+      from: "goumrane.ibrahim@ensam-casa.ma", // Who is sending the letter
+      to: NewUser?.email, // Who is receiving the letter
+      subject:
+        "Response of Your Request To Join the Project : " + projectObj?.name, // The title of the letter
+      text: "That was easy!", // The simple message inside the letter
+      html, // A fancy message inside the letter with bold text
+    };
+    emailSender(mailData)
+      .then(() => {})
+      .catch((error) => {
+        next(error);
+      });
+
+    res.status(200).send(
+      `
+        <html>
+          <head>
+              <meta http-equiv="refresh" content="3;url=http://localhost:5173/home/" />
+          </head>
+          <body>
+          <h1>Your response has been registered successfully. The user has been ${
+            status === "ACCEPTED" ? "ACCEPTED" : "REJECTED"
+          }</h1>
+              <h1>Redirecting in 3 seconds...</h1>
+          </body>
+      </html>
+`
+    );
   } catch (error) {
     next(error);
   }
@@ -196,12 +419,12 @@ export const updateProject: RequestHandler<
 };
 
 export const updateProjectMembers: RequestHandler<
-  ProjectModifDelete,
   unknown,
-  User[],
-  unknown
+  unknown,
+  autorisationModel[],
+  ExtendedQuery
 > = async (req, res, next) => {
-  const { id } = req.params;
+  const { moduleId: id } = req.query;
   const NewMembers = req.body;
 
   try {
@@ -214,10 +437,15 @@ export const updateProjectMembers: RequestHandler<
       throw createHttpError(404, "Project not found");
     }
 
-    // Remove all existing project members
+    // Remove all existing project members and their authorizations
     await projectMemeberAssociation.deleteMany({
       where: {
         projectId: Number(id),
+      },
+    });
+    await Autorisation.deleteMany({
+      where: {
+        moduleId: Number(id),
       },
     });
 
@@ -231,13 +459,60 @@ export const updateProjectMembers: RequestHandler<
       await projectMemeberAssociation.createMany({
         data: membersToAdd,
       });
-    }
 
-    res.status(200).json({ message: "Members updated successfully" });
+      // Prepare new authorization data and flatten the array
+      const newAuthData = NewMembers.flatMap((member) =>
+        member.auth.map((auth) => ({
+          userId: +member.id,
+          moduleId: +auth.moduleId,
+          moduleType: auth.moduleType,
+          action: auth.action,
+        }))
+      );
+
+      if (newAuthData.length > 0) {
+        await Autorisation.createMany({
+          data: newAuthData,
+        });
+      }
+
+      // Retrieve all updated permissions
+      const updatedPermissions = await Autorisation.findMany({
+        where: {
+          moduleId: Number(id),
+        },
+      });
+
+      // Group permissions by user and map them back to members
+      const membersWithPermissions: autorisationModel[] = NewMembers.map(
+        (member) => {
+          const memberPermissions = updatedPermissions
+            .filter((auth) => auth.userId === +member.id)
+            .map((auth) => ({
+              id: auth.id.toString(),
+              moduleId: auth.moduleId.toString(),
+              moduleType: auth.moduleType,
+              action: auth.action,
+            }));
+
+          return {
+            id: member.id,
+            name: member.name,
+            email: member.email,
+            auth: memberPermissions,
+          };
+        }
+      );
+
+      res.status(200).json(membersWithPermissions);
+    } else {
+      res.status(200).json([]);
+    }
   } catch (error) {
     next(error);
   }
 };
+
 export const deleteProject: RequestHandler<
   ProjectModifDelete,
   unknown,
@@ -271,18 +546,44 @@ export const getProjectMembers: RequestHandler = async (req, res, next) => {
       where: {
         projectId: Number(id),
       },
+      include: {
+        user: true,
+      },
     });
     if (!projectUsers) {
       throw createHttpError(404, "No users found");
     }
-    const users = await user.findMany({
-      where: {
-        id: {
-          in: projectUsers.map((user) => user.userId),
-        },
-      },
+    const users: Member[] = projectUsers.map(({ user: { id, ...data } }) => {
+      return {
+        ...data,
+        id: id.toString(),
+      };
     });
-    res.status(200).json(users);
+    const newMembers = await Promise.all(
+      users.map(async (user) => {
+        const auths = await Autorisation.findMany({
+          where: {
+            userId: +user.id,
+            moduleId: +id,
+          },
+        });
+        const inseertedAuth: authorisation[] = auths.map((auth) => {
+          return {
+            id: auth.id.toString(),
+            moduleId: auth.moduleId.toString(),
+            moduleType: auth.moduleType,
+            action: auth.action,
+          };
+        });
+
+        return {
+          ...user,
+          auth: inseertedAuth,
+        };
+      })
+    );
+
+    res.status(200).json(newMembers);
   } catch (error) {
     next(error);
   }

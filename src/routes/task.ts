@@ -39,20 +39,20 @@ router.post(
   "/",
   validateTask,
   checkError,
-  checkAuthorization(ModuleType.TASK, Action.CREATE),
+  checkAuthorization(ModuleType.TASKMANAGER, Action.CREATE),
   TaskController.createTask
 );
 router.put(
   "/",
   validateTask,
   checkError,
-  checkAuthorization(ModuleType.TASK, Action.UPDATE),
+  checkAuthorization(ModuleType.TASKMANAGER, Action.UPDATE),
   TaskController.updateTask,
   TaskController.createTask
 );
 router.delete(
   "/:id",
-  checkAuthorization(ModuleType.TASK, Action.DELETE),
+  checkAuthorization(ModuleType.TASKMANAGER, Action.DELETE),
   TaskController.deleteTask
 );
 

@@ -15,6 +15,11 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 }
+export interface Member {
+  id: string;
+  name: string;
+  email: string;
+}
 export interface UserUpdate {
   name: string;
   email?: string;

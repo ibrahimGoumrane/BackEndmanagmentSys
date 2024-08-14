@@ -31,6 +31,10 @@ export interface ProjectModifDelete {
 export interface ProjectSearch {
   search: string;
 }
-
+export interface ResponseToJoin {
+  projectId: number;
+  userId: string;
+  status: string;
+}
 export const project = prisma.project;
 export const projectMemeberAssociation = prisma.projectMemberAssociation;
