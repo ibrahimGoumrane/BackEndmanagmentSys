@@ -9,22 +9,22 @@ import { Action, ModuleType } from "@prisma/client";
 import {
   deleteAuth,
   extendAuth,
-  updateAuth,
 } from "../middleware/autorisationMidlwares/extendAuth";
 
 const router = Router();
 
 //no auth needed to perform this actions
 router.get("/", ProjectController.getProjects);
-router.get('/requestJoin/response' ,ProjectController.handleReponseRequestJoin)
-router.get('/requestJoin/:id' ,ProjectController.requestToJoin)
+router.get("/requestJoin/response", ProjectController.handleReponseRequestJoin);
+router.get("/requestJoin/:id", ProjectController.requestToJoin);
 router.get("/user/", ProjectController.getUserProjects);
 router.get("/user/:id", ProjectController.getProjectMembers);
 router.get("/status/:id", ProjectController.getProjectStatus);
 router.get("/task/:id", ProjectController.getProjectTasks);
 router.get("/comment/:id", ProjectController.getProjectActivity);
-router.get('/auth' , ProjectController.getProjectAuth)
-router.get("/:id", ProjectController.getProjectInfo);
+router.get("/auth", ProjectController.getProjectAuth);
+router.get("/info/:id", ProjectController.getProjectInfo);
+router.get("/:id", ProjectController.ProjectData);
 //here we give the auth to the creator
 router.post(
   "/",
@@ -48,18 +48,23 @@ router.post(
 router.put(
   "/auth/project",
   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
-  updateAuth(ModuleType.PROJECT, Action.UPDATE)
+  extendAuth(ModuleType.PROJECT, Action.UPDATE)
 );
 //taskManager Authorisation
 router.post(
-  "/auth/taskManager",
-  checkAuthorization(ModuleType.PROJECT, Action.CREATE),
+  "/auth/taskManager/create",
+  checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
   extendAuth(ModuleType.TASKMANAGER, Action.CREATE)
 );
-router.put(
-  "/auth/taskManager",
+router.post(
+  "/auth/taskManager/update",
   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
-  updateAuth(ModuleType.TASKMANAGER, Action.UPDATE)
+  extendAuth(ModuleType.TASKMANAGER, Action.UPDATE)
+);
+router.post(
+  "/auth/taskManager/delete",
+  checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
+  extendAuth(ModuleType.TASKMANAGER, Action.DELETE)
 );
 //delete a permission
 router.delete(

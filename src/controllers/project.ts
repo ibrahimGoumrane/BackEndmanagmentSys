@@ -50,6 +50,35 @@ export const getProjects: RequestHandler<
     next(error);
   }
 };
+
+export const ProjectData: RequestHandler = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const returnedProj = await project.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+    if (!returnedProj) {
+      throw createHttpError(404, "Project not found");
+    }
+    const returnedData = {
+      id: returnedProj.id,
+      name: returnedProj.name,
+      description: returnedProj.description,
+      statusId: returnedProj.statusId,
+      ManagerId: returnedProj.ManagerId,
+      startDate: returnedProj.startDate.toISOString(),
+      endDate: returnedProj.endDate?.toISOString() || "",
+      createdAt: returnedProj.createdAt.toISOString(),
+      updatedAt: returnedProj.updatedAt.toISOString(),
+    };
+
+    res.status(200).json(returnedData);
+  } catch (error) {
+    next(error);
+  }
+};
 export const getProjectInfo: RequestHandler = async (req, res, next) => {
   const { id } = req.params;
   try {
