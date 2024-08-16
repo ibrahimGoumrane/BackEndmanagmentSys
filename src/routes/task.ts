@@ -22,12 +22,12 @@ router.delete("/user", TaskController.deleteUserTasks);
 router.post(
   "/auth",
   checkAuthorization(ModuleType.TASKMANAGER, Action.CREATE),
-  extendAuth(ModuleType.TASK, Action.CREATE)
+  extendAuth(ModuleType.TASKMANAGER, Action.CREATE)
 );
 router.put(
   "/auth",
   checkAuthorization(ModuleType.TASKMANAGER, Action.UPDATE),
-  updateAuth(ModuleType.TASK, Action.UPDATE)
+  updateAuth(ModuleType.TASKMANAGER, Action.UPDATE)
 );
 router.delete(
   "/auth",

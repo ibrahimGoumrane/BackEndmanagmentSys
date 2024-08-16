@@ -1,5 +1,4 @@
 import { Router } from "express";
-
 import * as ProjectController from "../controllers/project";
 import { validateCreateProject } from "../util/validators/validateData";
 import { checkError } from "../middleware/requireAuth";
@@ -40,16 +39,11 @@ router.post(
 );
 //////////////here we permit the auth to be dynamique
 //Project Authorisation
-router.post(
-  "/auth/project",
-  checkAuthorization(ModuleType.PROJECT, Action.CREATE),
-  extendAuth(ModuleType.PROJECT, Action.CREATE)
-);
-router.put(
-  "/auth/project",
-  checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
-  extendAuth(ModuleType.PROJECT, Action.UPDATE)
-);
+// router.put(
+//   "/auth/project",
+//   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
+//   extendAuth(ModuleType.PROJECT, Action.UPDATE)
+// );
 //taskManager Authorisation
 router.post(
   "/auth/taskManager/create",
@@ -72,6 +66,7 @@ router.delete(
   checkAuthorization(ModuleType.PROJECT, Action.DELETE),
   deleteAuth()
 );
+
 
 //checkAuth
 router.put(

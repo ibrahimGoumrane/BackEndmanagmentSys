@@ -38,6 +38,7 @@ export interface SignUpBody {
   password?: string;
   age: number;
   skills?: string[];
+  profileImg?: FileList;
 }
 export interface DeleteBody {
   id: string;

@@ -15,6 +15,10 @@ import commentRoute from "./routes/comment";
 import activityRoute from "./routes/activity";
 import chatRoute from "./routes/chat";
 import env from "./util/validateEnv";
+import fileUpload from "express-fileupload";
+import bodyParser from 'body-parser';
+
+
 import { setupSocketServer } from "./Sockets/socketServer";
 const app = express();
 export const server = http.createServer(app);
@@ -27,6 +31,10 @@ const corsOptions = {
 };
 
 setupSocketServer(server, corsOptions);
+
+//this is used for file upload
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(fileUpload());
 
 // Apply CORS middleware with options
 app.use(cors(corsOptions));

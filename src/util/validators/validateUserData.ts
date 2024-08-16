@@ -9,7 +9,7 @@ export const validateSignUp = [
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters long"),
   body("age").trim().isNumeric().notEmpty().withMessage("Age is required"),
-  body("skills").trim().isArray().optional(),
+  body("skills").isArray().optional().withMessage("Skills should be an array"),
 ];
 export const validateLogin = [
   body("name").trim().isString().notEmpty().withMessage("name is required"),

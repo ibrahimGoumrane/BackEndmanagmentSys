@@ -2,7 +2,6 @@ import { RequestHandler } from "express";
 import {
   DeleteBody,
   LoginBody,
-  SignUpBody,
   user,
   UserUpdate,
   UserUpdateSkills,
@@ -12,6 +11,7 @@ import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import { userskills } from "../models/skills";
 import { teamMember } from "../models/team";
+import multer from "multer";
 
 export const getLoggedInUser: RequestHandler = async (req, res, next) => {
   const userId = req.session.userId;
@@ -52,82 +52,95 @@ export const getUserData: RequestHandler<
     next(error);
   }
 };
-export const signUp: RequestHandler<
-  unknown,
-  unknown,
-  SignUpBody,
-  unknown
-> = async (req, res, next) => {
-  const {
-    name = "",
-    email = "",
-    password: passwordRaw = "",
-    age,
-    skills,
-  } = req.body;
-  try {
-    //verify username exsistance
-    const existingUsername = await user.findFirst({
-      where: {
-        name: name, // Provide the email property here
-      },
-    });
-    if (existingUsername) {
-      throw createHttpError(409, "Username already exists");
-    }
-    //verify email exsistance
-    const existingEmail = await user.findFirst({
-      where: {
-        email: email, // Provide the email property here
-      },
-    });
-    if (existingEmail) {
-      throw createHttpError(409, "Email already exists");
+
+const upload = multer({ dest: "uploads/" }); // Adjust the destination folder as needed
+
+export const signUp: RequestHandler = async (req, res, next) => {
+  // Use multer to handle file uploads
+  upload.single("profileImg")(req, res, async (err) => {
+    if (err) {
+      return next(createHttpError(500, "File upload error"));
     }
 
-    //verify password
-    if (passwordRaw.length < 8) {
-      throw createHttpError(400, "Password must be at least 8 characters");
-    }
-    const passwordHashed = await bcrypt.hash(passwordRaw, 10);
+    const {
+      name = "",
+      email = "",
+      password: passwordRaw = "",
+      age,
+      skills,
+    } = req.body;
+    console.log(req);
+    const profileImg = req.file; // Access the uploaded file
 
-    //working on skill
-    let newUser = null;
+    console.log(profileImg); // Debugging: Check if the file is being received
 
-    if (!skills) {
-      newUser = await user.create({
-        data: {
-          name,
-          email,
-          password: passwordHashed,
-          age: +age,
+    try {
+      //verify username exsistance
+      const existingUsername = await user.findFirst({
+        where: {
+          name: name,
         },
       });
-    } else {
-      const skillsIds = skills.map((skill) => +skill);
-      //bind user with skills
-      newUser = await user.create({
-        data: {
-          name,
-          email,
-          password: passwordHashed,
-          age: +age,
-          UserSkill: {
-            createMany: {
-              data: skillsIds.map((skillId: number) => ({
-                skillId: skillId,
-              })),
+      if (existingUsername) {
+        throw createHttpError(409, "Username already exists");
+      }
+
+      //verify email exsistance
+      const existingEmail = await user.findFirst({
+        where: {
+          email: email,
+        },
+      });
+      if (existingEmail) {
+        throw createHttpError(409, "Email already exists");
+      }
+
+      //verify password
+      if (passwordRaw.length < 8) {
+        throw createHttpError(400, "Password must be at least 8 characters");
+      }
+      const passwordHashed = await bcrypt.hash(passwordRaw, 10);
+
+      //working on skill
+      let newUser = null;
+
+      if (!skills) {
+        newUser = await user.create({
+          data: {
+            name,
+            email,
+            password: passwordHashed,
+            age: +age,
+          },
+        });
+      } else {
+        const skillsIds: number[] = skills.map(
+          (skill: string | number) => +skill
+        );
+        //bind user with skills
+        newUser = await user.create({
+          data: {
+            name,
+            email,
+            password: passwordHashed,
+            age: +age,
+            UserSkill: {
+              createMany: {
+                data: skillsIds.map((skillId: number) => ({
+                  skillId: skillId,
+                })),
+              },
             },
           },
-        },
-      });
-    }
+        });
+      }
 
-    req.session.userId = newUser.id;
-    res.status(201).json(newUser);
-  } catch (error) {
-    next(error);
-  }
+      req.session.userId = newUser.id;
+      res.status(201).json(newUser);
+    } catch (error) {
+      next(error);
+    }
+  });
 };
 
 export const logIn: RequestHandler<
