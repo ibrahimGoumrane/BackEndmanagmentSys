@@ -16,8 +16,7 @@ import activityRoute from "./routes/activity";
 import chatRoute from "./routes/chat";
 import env from "./util/validateEnv";
 import fileUpload from "express-fileupload";
-import bodyParser from 'body-parser';
-
+import bodyParser from "body-parser";
 
 import { setupSocketServer } from "./Sockets/socketServer";
 const app = express();
@@ -29,19 +28,16 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Ensure OPTIONS is included
   credentials: true,
 };
-
 setupSocketServer(server, corsOptions);
-
-//this is used for file upload
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(fileUpload());
 
 // Apply CORS middleware with options
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions)); // Preflight request handling
 
 app.use(morgan("dev"));
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(fileUpload()); // If using express-fileupload
+app.use(bodyParser.json()); // Parse JSON bodies
 
 app.use(
   session({
