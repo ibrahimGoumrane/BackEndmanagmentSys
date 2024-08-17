@@ -2,13 +2,9 @@ import "dotenv/config";
 import env from "./util/validateEnv";
 import server from "./app";
 import { PrismaClient } from "@prisma/client";
-import { resolve } from "path";
-
-export const projectRoot = resolve(__dirname, ".."); // Adjust the number of '..' based on your directory structure
 
 const port = env.PORT;
 const prisma = new PrismaClient();
-
 prisma
   .$connect()
   .then(() => {

@@ -12,7 +12,8 @@ import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import { userskills } from "../models/skills";
 import { teamMember } from "../models/team";
-import { projectRoot } from "../server";
+import { projectRoot } from "../app";
+import path from "path";
 
 export const getLoggedInUser: RequestHandler = async (req, res, next) => {
   const userId = req.session.userId;
@@ -61,9 +62,6 @@ export const signUp: RequestHandler<
   unknown
 > = async (req, res, next) => {
   //this is used for file upload if any file is uploaded
-  if (!req.files || !req.files.profileImg) {
-    return res.status(400).send("No files were uploaded.");
-  }
   const {
     name = "",
     email = "",
@@ -100,18 +98,19 @@ export const signUp: RequestHandler<
 
     //working on skill
     let newUser = null;
-    if (!(req.files.profileImg instanceof Array) && req.files.profileImg) {
-      const uploadedFile = req.files.profileImg;
-      const fileName = `${Date.now()}-${uploadedFile.name}`;
-      const uploadPath = projectRoot + "\\uploads\\profile\\" + fileName;
-      console.log(uploadPath);
-      uploadedFile.mv(uploadPath, (err) => {
-        if (err) {
-          return next(createHttpError(500, "Failed to upload file"));
-        }
-      });
+    let uploadPath = projectRoot + "\\uploads\\profile\\default.jpg";
+    if (req.files && req.files.profileImg) {
+      if (!(req.files?.profileImg instanceof Array) && req.files?.profileImg) {
+        const uploadedFile = req.files.profileImg;
+        const fileName = `${Date.now()}-${uploadedFile.name}`;
+        uploadPath = projectRoot + "\\uploads\\profile\\" + fileName;
+        uploadedFile.mv(uploadPath, (err) => {
+          if (err) {
+            return next(createHttpError(500, "Failed to upload file"));
+          }
+        });
+      }
     }
-
     if (!skills) {
       newUser = await user.create({
         data: {
@@ -119,6 +118,7 @@ export const signUp: RequestHandler<
           email,
           password: passwordHashed,
           age: +age,
+          profileImg: uploadPath,
         },
       });
     } else {
@@ -132,6 +132,7 @@ export const signUp: RequestHandler<
           email,
           password: passwordHashed,
           age: +age,
+          profileImg: uploadPath,
           UserSkill: {
             createMany: {
               data: skillsIds.map((skillId: number) => ({
@@ -142,7 +143,6 @@ export const signUp: RequestHandler<
         },
       });
     }
-
     req.session.userId = newUser.id;
     res.status(201).json(newUser);
   } catch (error) {
@@ -172,6 +172,29 @@ export const logIn: RequestHandler<
     }
     req.session.userId = existingUser.id;
     res.status(200).json(existingUser);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProfileImage: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.params.id; // Get the user ID from the request parameters
+
+    // Fetch user data from the database
+    const userData = await user.findUnique({
+      where: { id: Number(userId) },
+      select: { profileImg: true }, // Assuming 'profileImg' stores the image path
+    });
+
+    if (!userData || !userData.profileImg) {
+      return next(createHttpError(404, "Image not found"));
+    }
+
+    // Generate the URL to access the image
+    const imageUrl = `/uploads/profile/${path.basename(userData.profileImg)}`;
+
+    res.json(imageUrl);
   } catch (error) {
     next(error);
   }

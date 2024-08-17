@@ -1,24 +1,28 @@
+import bodyParser from "body-parser";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
+import fileUpload from "express-fileupload";
 import session from "express-session";
 import http from "http";
 import createHttpError, { isHttpError } from "http-errors";
 import morgan from "morgan";
-import usersRoute from "./routes/user";
 import requiresAuth from "./middleware/requireAuth";
-import skillRoute from "./routes/skills";
-import taskRoute from "./routes/task";
-import teamRoute from "./routes/team";
-import statusRoute from "./routes/status";
-import projectRoute from "./routes/project";
-import commentRoute from "./routes/comment";
 import activityRoute from "./routes/activity";
 import chatRoute from "./routes/chat";
+import commentRoute from "./routes/comment";
+import projectRoute from "./routes/project";
+import skillRoute from "./routes/skills";
+import statusRoute from "./routes/status";
+import taskRoute from "./routes/task";
+import teamRoute from "./routes/team";
+import usersRoute from "./routes/user";
 import env from "./util/validateEnv";
-import fileUpload from "express-fileupload";
-import bodyParser from "body-parser";
 
+import path, { resolve } from "path";
 import { setupSocketServer } from "./Sockets/socketServer";
+
+export const projectRoot = resolve(__dirname, ".."); // Adjust the number of '..' based on your directory structure
+
 const app = express();
 export const server = http.createServer(app);
 
@@ -29,6 +33,9 @@ const corsOptions = {
   credentials: true,
 };
 setupSocketServer(server, corsOptions);
+
+//this middleware will be used to Serve static files
+app.use("/uploads", express.static(path.join(projectRoot, "uploads")));
 
 // Apply CORS middleware with options
 app.use(cors(corsOptions));
