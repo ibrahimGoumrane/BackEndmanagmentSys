@@ -51,9 +51,13 @@ router.put(
   TaskController.createTask
 );
 router.delete(
+  "/project/:id",
+  checkAuthorization(ModuleType.TASKMANAGER, Action.DELETE),
+  TaskController.deleteProjectTask
+);
+router.delete(
   "/:id",
   checkAuthorization(ModuleType.TASKMANAGER, Action.DELETE),
   TaskController.deleteTask
 );
-
 export default router;

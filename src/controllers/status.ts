@@ -52,18 +52,19 @@ export const createTaskStatus: RequestHandler<
   unknown,
   statusCreation,
   unknown
-> = (req, res, next) => {
-  const { name } = req.body;
-
+> = async (req, res, next) => {
+  const { name, projectId } = req.body;
   try {
     if (!name) {
       throw createHttpError(400, "Please provide all the required fields");
     }
-    const newStatus = Taskstatus.create({
+    const newStatus = await Taskstatus.create({
       data: {
         name,
+        projectId: +projectId,
       },
     });
+
     res.status(201).json(newStatus);
   } catch (error) {
     next(error);

@@ -111,9 +111,9 @@ export const createTask: RequestHandler<
     const CreatedTask = await task.create({
       data: {
         name,
-        statusId,
-        projectId,
-        creatorId,
+        statusId: +statusId,
+        projectId: +projectId,
+        creatorId: +creatorId,
         description,
       },
     });
@@ -178,16 +178,13 @@ export const updateTask: RequestHandler<
         endDate: endDate ? new Date(endDate) : undefined,
       },
     });
-    console.log(UpdatedTask);
-
     return res.status(200).json(UpdatedTask);
   } catch (error) {
     return next(error);
   }
 };
 
-// Delete a task
-export const deleteTask: RequestHandler<
+export const deleteProjectTask: RequestHandler<
   taskDeletion,
   unknown,
   unknown,
@@ -208,6 +205,35 @@ export const deleteTask: RequestHandler<
     await task.deleteMany({
       where: {
         projectId: +id,
+      },
+    });
+    res
+      .status(200)
+      .json({ message: "Task deleted successfully", FoundedTask: FoundedTask });
+  } catch (error) {
+    next(error);
+  }
+};
+// Delete a task
+
+export const deleteTask: RequestHandler<
+  taskDeletion,
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const FoundedTask = await task.findFirst({
+      where: {
+        id: +id,
+      },
+    });
+    if (!FoundedTask)
+      createHttpError(404, "There is not task with this id  : " + id);
+    await task.delete({
+      where: {
+        id: +id,
       },
     });
     res
@@ -246,5 +272,3 @@ export const deleteUserTasks: RequestHandler<
     next(error);
   }
 };
-
-
