@@ -3,7 +3,15 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function initializeGlobalStatuses() {
-  const defaultTaskStatuses = ["backlog", "to do", "ongoing", "finished"];
+  const defaultTaskStatuses = [
+    "Product backlog",
+    "Sprint backlog",
+    "To Do",
+    "On Work",
+    "Review",
+    "Testing",
+    "finished",
+  ];
   const taskStatusCount = await prisma.taskStatus.count();
 
   if (taskStatusCount === 0) {
