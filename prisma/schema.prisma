@@ -90,6 +90,7 @@ model Project {
   Manager                  User                       @relation(fields: [ManagerId], references: [id])
   tasks                    Task[]
   ProjectMemberAssociation ProjectMemberAssociation[]
+  activities                Activity[]
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
   description              String
@@ -119,7 +120,6 @@ model Task {
   projectId   Int
   project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   comments    Comment[]
-  activities  Activity[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -147,20 +147,28 @@ model Comment {
   @@index([taskId]) // Index on taskId
 }
 
-// Activity model
 model Activity {
-  id          Int      @id @default(autoincrement())
-  description String
-  taskId      Int
-  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([taskId]) // Index on taskId
-  @@index([userId]) // Index on userId
+  id              Int          @id @default(autoincrement())
+  activityType    ACTIVITYTYPE
+  oldValue        String?
+  newValue        String?
+  userId          Int
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  projectId       Int
+  project         Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@index([userId , id]) 
 }
+
+enum ACTIVITYTYPE {
+  CREATE
+  DELETE
+  UPDATE
+  JOIN
+  LEAVE
+}
+
 
 // ProjectMemberAssociation model
 model ProjectMemberAssociation {
