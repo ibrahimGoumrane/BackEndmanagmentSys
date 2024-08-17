@@ -96,8 +96,7 @@ export const signUp: RequestHandler<
     }
     const passwordHashed = await bcrypt.hash(passwordRaw, 10);
 
-    //working on skill
-    let newUser = null;
+    ///working on profile image
     let uploadPath = projectRoot + "\\uploads\\profile\\default.jpg";
     if (req.files && req.files.profileImg) {
       if (!(req.files?.profileImg instanceof Array) && req.files?.profileImg) {
@@ -111,6 +110,9 @@ export const signUp: RequestHandler<
         });
       }
     }
+
+    //working on skill
+    let newUser = null;
     if (!skills) {
       newUser = await user.create({
         data: {

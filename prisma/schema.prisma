@@ -93,6 +93,7 @@ model Project {
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
   description              String
+  projectImage             String?                    
   startDate                DateTime                   @default(now())
   endDate                  DateTime?
   TaskStatus               TaskStatus[]
@@ -181,6 +182,7 @@ model Team {
   name                   String
   members                TeamMember[]
   ownerId                Int
+  teamImage              String?                    
   owner                  User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   chats     TeamChat[] // Relation to the TeamChat model
 

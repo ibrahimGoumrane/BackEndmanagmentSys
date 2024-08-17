@@ -19,6 +19,7 @@ router.get("/:id", TeamController.getTeam);
 router.get("/user/:id", TeamController.getUserTeam);
 router.get("/members/:id", TeamController.getTeamMembers);
 router.get("/requestJoin/response", TeamController.handleReponseRequestJoin);
+router.get("/img/:id", TeamController.getTeamImage);
 router.post("/requestJoin", TeamController.requestJoin);
 
 //everyone can do them but here only the user how created that team should have accss to its delete and update

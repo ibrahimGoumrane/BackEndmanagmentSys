@@ -17,6 +17,8 @@ import {
   rejectionRequestTeamEmail,
 } from "../middleware/emailTemplates/teamEmail";
 import { Params } from "../models/autorisation";
+import { projectRoot } from "../app";
+import path from "path";
 export const getTeams: RequestHandler<
   unknown,
   unknown,
@@ -317,20 +319,43 @@ export const createTeam: RequestHandler<
     if (teamExsist) {
       throw createHttpError(400, "Team already exists");
     }
+    const uploadPath = projectRoot + "\\uploads\\team\\default.jpg";
+
     const newTeam = await team.create({
       data: {
         name,
         ownerId: userId,
-      },
-    });
-    await teamMember.create({
-      data: {
-        userId,
-        teamId: newTeam.id,
+        teamImage: uploadPath,
       },
     });
     req.params.id = newTeam.id;
     next();
+  } catch (error) {
+    next(error);
+  }
+};
+export const getTeamImage: RequestHandler<
+  TeamDeletion,
+  unknown,
+  TeamCreation,
+  unknown
+> = async (req, res, next) => {
+  const { id } = req.params;
+  const { userId } = req.session;
+  try {
+    if (!userId) {
+      throw createHttpError(401, "User not authenticated");
+    }
+    const teamExsist = await team.findFirst({
+      where: {
+        id,
+      },
+    });
+    if (!teamExsist) {
+      throw createHttpError(400, "Team already exists");
+    }
+    const imageUrl = `/uploads/profile/${path.basename(teamExsist.teamImage ?? "")}`;
+    res.json(imageUrl);
   } catch (error) {
     next(error);
   }

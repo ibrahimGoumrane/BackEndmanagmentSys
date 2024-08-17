@@ -23,6 +23,8 @@ router.get("/task/:id", ProjectController.getProjectTasks);
 router.get("/comment/:id", ProjectController.getProjectActivity);
 router.get("/auth", ProjectController.getProjectAuth);
 router.get("/info/:id", ProjectController.getProjectInfo);
+router.get("/img/:id", ProjectController.getProjectImage);
+
 router.get("/:id", ProjectController.ProjectData);
 //here we give the auth to the creator
 router.post(
@@ -37,13 +39,6 @@ router.post(
   giveAuth(ModuleType.TASKMANAGER, Action.DELETE),
   ProjectController.getProject
 );
-//////////////here we permit the auth to be dynamique
-//Project Authorisation
-// router.put(
-//   "/auth/project",
-//   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
-//   extendAuth(ModuleType.PROJECT, Action.UPDATE)
-// );
 //taskManager Authorisation
 router.post(
   "/auth/taskManager/create",
@@ -66,7 +61,6 @@ router.delete(
   checkAuthorization(ModuleType.PROJECT, Action.DELETE),
   deleteAuth()
 );
-
 
 //checkAuth
 router.put(

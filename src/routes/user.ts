@@ -9,6 +9,7 @@ const router = Router();
 router.get("/", requiresAuth, UserController.getLoggedInUser);
 router.get("/:id", requiresAuth, UserController.getUserData);
 router.get("/profile/:id", requiresAuth, UserController.getProfileImage);
+
 router.post("/signUp", validateSignUp, checkError, UserController.signUp);
 router.post("/logIn", validateLogin, checkError, UserController.logIn);
 router.post("/logout", UserController.logout);

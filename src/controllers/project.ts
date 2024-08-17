@@ -26,6 +26,8 @@ import {
   ExtendedQuery,
 } from "../models/autorisation";
 import { ModuleType } from "@prisma/client";
+import { projectRoot } from "../app";
+import path from "path";
 
 export const getProjects: RequestHandler<
   unknown,
@@ -108,6 +110,24 @@ export const getProjectInfo: RequestHandler = async (req, res, next) => {
     };
 
     res.status(200).json(returnedData);
+  } catch (error) {
+    next(error);
+  }
+};
+export const getProjectImage: RequestHandler = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const projectData = await project.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+    if (!projectData) {
+      throw createHttpError(404, "Project not found");
+    }
+    const imageUrl = `/uploads/profile/${path.basename(projectData.projectImage ?? "")}`;
+
+    res.json(imageUrl);
   } catch (error) {
     next(error);
   }
@@ -348,6 +368,9 @@ export const createProject: RequestHandler<
   if (!ManagerId) {
     throw createHttpError(401, "User not authenticated");
   }
+  ///working on profile image
+  const uploadPath = projectRoot + "\\uploads\\project\\default.jpg";
+
   try {
     const projectModal = await project.create({
       data: {
@@ -361,6 +384,7 @@ export const createProject: RequestHandler<
             userId: ManagerId,
           },
         },
+        projectImage: uploadPath,
       },
     });
     if (!projectModal) {
