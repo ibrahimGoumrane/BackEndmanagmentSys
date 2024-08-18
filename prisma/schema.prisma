@@ -19,7 +19,8 @@ model User {
   updatedAt                 DateTime                   @updatedAt
   projects                  Project[]
   comments                  Comment[]
-  activities                Activity[]
+  ProjectMembershipActivities                ProjectMembershipActivity[]
+  taskActivities                           TaskActivity[]
   projectMemberAssociations ProjectMemberAssociation[]
   teamMembers               TeamMember[]
   tasksAssigne              Task[]                     @relation("TaskAssignee")
@@ -89,8 +90,9 @@ model Project {
   ManagerId                Int
   Manager                  User                       @relation(fields: [ManagerId], references: [id])
   tasks                    Task[]
-  ProjectMemberAssociation ProjectMemberAssociation[]
-  activities                Activity[]
+  ProjectMemberAssociation  ProjectMemberAssociation[]
+  taskActivities  TaskActivity[]
+  projectMembershipActivities ProjectMembershipActivity[]
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
   description              String
@@ -120,6 +122,7 @@ model Task {
   projectId   Int
   project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   comments    Comment[]
+  taskActivity TaskActivity[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -147,24 +150,40 @@ model Comment {
   @@index([taskId]) // Index on taskId
 }
 
-model Activity {
-  id              Int          @id @default(autoincrement())
-  activityType    ACTIVITYTYPE
-  oldValue        String?
-  newValue        String?
-  userId          Int
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  projectId       Int
-  project         Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  @@index([userId , id]) 
+model TaskActivity {
+  id           Int          @id @default(autoincrement())
+  activityType TASKACTIVITYTYPE
+  oldValue     String?
+  newValue     String?
+  userId       Int
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId       Int? 
+  task         Task?         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  projectId    Int
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  @@index([userId, id]) 
 }
 
-enum ACTIVITYTYPE {
+enum TASKACTIVITYTYPE {
   CREATE
   DELETE
   UPDATE
+}
+model ProjectMembershipActivity {
+  id           Int          @id @default(autoincrement())
+  activityType MEMBERSHIPACTIVITYTYPE
+  userId       Int
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId    Int
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  @@index([userId, id]) 
+}
+
+enum MEMBERSHIPACTIVITYTYPE {
   JOIN
   LEAVE
 }

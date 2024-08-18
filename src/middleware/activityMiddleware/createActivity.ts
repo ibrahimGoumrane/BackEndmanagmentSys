@@ -1,121 +1,120 @@
-import { RequestHandler } from "express";
-import { Activity, CreateActivity } from "../../models/activity";
-import { ACTIVITYTYPE } from "@prisma/client";
+import { NextFunction, RequestHandler } from "express";
+import {
+  TaskActivity,
+  MembershipActivity,
+  CreateActivity,
+} from "../../models/activity";
+import { TASKACTIVITYTYPE, MEMBERSHIPACTIVITYTYPE } from "@prisma/client";
 import createHttpError from "http-errors";
 
-export const createActivity = ({
-  activityType,
-}: CreateActivity): RequestHandler<
-  unknown,
-  unknown,
-  CreateActivity,
-  unknown
-> => {
+export const createDeleteActivity = (
+  activityType: TASKACTIVITYTYPE
+): RequestHandler<unknown, unknown, CreateActivity, unknown> => {
   return async (req, res, next) => {
     const { userId } = req.session;
+    const { Task } = res.locals;
+    const { projectId, id, name } = Task;
     if (!userId) {
       return next(createHttpError(401, "User not authenticated"));
     }
-    if (!req.body.projectId) {
+    if (!projectId) {
       return next(createHttpError(400, "Project ID is required"));
     }
-
+    if (!id) {
+      return next(createHttpError(400, "Task Id is required"));
+    }
     const commonData = {
       userId,
       createdAt: new Date(),
       activityType,
-      projectId: +req.body.projectId,
+      projectId: +projectId,
+      newValue: name,
+      taskId: activityType === TASKACTIVITYTYPE.CREATE ? +id : undefined,
     };
-
-    let specificData = {};
-
-    switch (activityType) {
-      case ACTIVITYTYPE.CREATE:
-      case ACTIVITYTYPE.DELETE:
-        specificData = { newValue: req.body.newValue };
-        break;
-
-      case ACTIVITYTYPE.UPDATE:
-        specificData = {
-          newValue: req.body.newValue,
-          oldValue: req.body.oldValue,
-        };
-        break;
-
-      case ACTIVITYTYPE.JOIN:
-      case ACTIVITYTYPE.LEAVE:
-        // No additional data needed for JOIN/LEAVE, just use commonData
-        break;
-
-      default:
-        return next({
-          message: "Invalid activity type provided",
-          status: 400,
-        });
-    }
 
     try {
       // Combine common data with specific data based on activity type
-      await Activity.create({
-        data: {
-          ...commonData,
-          ...specificData,
-        },
+      await TaskActivity.create({
+        data: commonData,
       });
 
-      res.status(201).json({
-        message: "Activity logged successfully",
-      });
+      res.status(201).json(Task);
     } catch (error) {
       console.error("Error creating activity:", error);
       next(error); // Pass the error to the error-handling middleware
     }
   };
 };
-export const getActivitiesByType: RequestHandler<
-  { projectId: string; activityType: string },
-  unknown,
-  unknown,
-  unknown
-> = async (req, res, next) => {
-  const { projectId, activityType } = req.params;
-  const { userId } = req.session;
 
+export const updateActivity = async (
+  userId: number,
+  projectId: number,
+  taskId: number,
+  oldValue: string,
+  newValue: string,
+  next: NextFunction
+) => {
   if (!userId) {
-    return next({
-      message: "User not authenticated",
-      status: 401,
-    });
+    return next(createHttpError(401, "User not Specified"));
+  }
+  if (!projectId) {
+    return next(createHttpError(400, "Project ID is required"));
+  }
+  if (!oldValue || !newValue) {
+    return next(createHttpError(400, "Old and new values are required"));
+  }
+  if (!taskId) {
+    return next(createHttpError(400, "Task ID is required"));
   }
 
-  try {
-    const validTypes = [
-      ACTIVITYTYPE.CREATE,
-      ACTIVITYTYPE.DELETE,
-      ACTIVITYTYPE.UPDATE,
-      ACTIVITYTYPE.JOIN,
-      ACTIVITYTYPE.LEAVE,
-    ];
-    const normalizedType = activityType.toUpperCase();
+  const activityType = TASKACTIVITYTYPE.UPDATE;
+  const insertedData = {
+    userId: +userId,
+    createdAt: new Date(),
+    activityType,
+    projectId: +projectId,
+    oldValue,
+    taskId: +taskId,
+    newValue,
+  };
 
-    if (!validTypes.includes(normalizedType as ACTIVITYTYPE)) {
-      return next({
-        message: "Invalid activity type",
-        status: 400,
-      });
+  const activity = await TaskActivity.create({ data: insertedData });
+  if (!activity) {
+    return next(createHttpError(500, "Error creating update activity"));
+  }
+
+  return activity;
+};
+
+export const JoinLeaveActivity = (
+  activityType: MEMBERSHIPACTIVITYTYPE
+): RequestHandler<unknown, unknown, CreateActivity, unknown> => {
+  return async (req, res, next) => {
+    const { userId, projectId } = req.body;
+    if (!userId) {
+      return next(createHttpError(401, "User not authenticated"));
+    }
+    if (!projectId) {
+      return next(createHttpError(400, "Project ID is required"));
     }
 
-    const activities = await Activity.findMany({
-      where: {
-        projectId: +projectId,
-        activityType: normalizedType as ACTIVITYTYPE,
-      },
-      orderBy: { createdAt: "asc" },
-    });
+    const commonData = {
+      userId: +userId,
+      createdAt: new Date(),
+      activityType,
+      projectId: +projectId,
+    };
 
-    res.json(activities);
-  } catch (error) {
-    console.error("Error getting activities:", error);
-    next(error);
-  }
+    try {
+      // Combine common data with specific data based on activity type
+      await MembershipActivity.create({
+        data: commonData,
+      });
+
+      next();
+    } catch (error) {
+      console.error("Error creating activity:", error);
+      next(error); // Pass the error to the error-handling middleware
+    }
+  };
 };

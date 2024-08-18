@@ -20,7 +20,6 @@ router.get("/user/", ProjectController.getUserProjects);
 router.get("/user/:id", ProjectController.getProjectMembers);
 router.get("/status/:id", ProjectController.getProjectStatus);
 router.get("/task/:id", ProjectController.getProjectTasks);
-router.get("/comment/:id", ProjectController.getProjectActivity);
 router.get("/auth", ProjectController.getProjectAuth);
 router.get("/info/:id", ProjectController.getProjectInfo);
 router.get("/img/:id", ProjectController.getProjectImage);

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
-import { activity } from "../models/activity";
 import {
   ProjectModifDelete,
   ProjectSearch,
@@ -680,36 +679,6 @@ export const getProjectTasks: RequestHandler = async (req, res, next) => {
       throw createHttpError(404, "No tasks found");
     }
     res.status(200).json(projectTasks);
-  } catch (error) {
-    next(error);
-  }
-};
-export const getProjectActivity: RequestHandler = async (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const projectTasks = await project.findFirst({
-      where: {
-        id: Number(id),
-      },
-      include: {
-        tasks: true,
-      },
-    });
-    if (!projectTasks) {
-      throw createHttpError(404, "No tasks found");
-    }
-    const projectActivity = await activity.findMany({
-      where: {
-        taskId: {
-          in: projectTasks.tasks.map((task) => task.id),
-        },
-      },
-      include: {
-        user: true,
-        task: true,
-      },
-    });
-    res.status(200).json(projectActivity);
   } catch (error) {
     next(error);
   }

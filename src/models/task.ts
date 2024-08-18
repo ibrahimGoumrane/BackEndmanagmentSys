@@ -1,3 +1,4 @@
+import { CreateActivity } from "./activity";
 import prisma from "./PrismaInit";
 
 export interface taskCreation {
@@ -7,7 +8,7 @@ export interface taskCreation {
   statusId: number;
 }
 
-export interface taskModif {
+export interface taskModif extends CreateActivity {
   name: string;
   AssigneeId?: number;
   StoryPoint?: number;
@@ -23,7 +24,7 @@ export interface taskDeletion {
   id: number;
 }
 
-export interface task {
+export interface Task {
   id: number;
   name: string;
   description?: string;
@@ -38,6 +39,5 @@ export interface task {
   updatedAt: string;
   creatorId: number;
 }
-
 
 export default prisma.task;

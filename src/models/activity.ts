@@ -1,18 +1,19 @@
-import { ACTIVITYTYPE } from "@prisma/client";
+import { TASKACTIVITYTYPE, MEMBERSHIPACTIVITYTYPE } from "@prisma/client";
 import prisma from "./PrismaInit";
 export interface CreateActivity {
-  activityType: ACTIVITYTYPE;
-  userId: string;
+  activityType: TASKACTIVITYTYPE;
+  userId?: string;
   oldValue?: string;
   newValue?: string;
   createdAt?: Date;
   updatedAt?: Date;
-  projectId?: string;
+  projectId: number;
+  taskId?: number;
 }
 
 export interface getMemebersActivity {
   userId: string;
-  activityType: ACTIVITYTYPE;
+  activityType: MEMBERSHIPACTIVITYTYPE;
   createdAt: Date;
   updatedAt: Date;
   projectId?: string;
@@ -20,7 +21,7 @@ export interface getMemebersActivity {
 export interface getCreateDeleteActivity {
   userId: string;
   value: string;
-  activityType: ACTIVITYTYPE;
+  activityType: TASKACTIVITYTYPE;
   createdAt: Date;
   updatedAt: Date;
   projectId?: string;
@@ -33,4 +34,5 @@ export interface getUpdateActivity {
   updatedAt: Date;
   projectId?: string;
 }
-export const Activity = prisma.activity;
+export const TaskActivity = prisma.taskActivity;
+export const MembershipActivity = prisma.projectMembershipActivity;

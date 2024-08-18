@@ -7,7 +7,6 @@ import http from "http";
 import createHttpError, { isHttpError } from "http-errors";
 import morgan from "morgan";
 import requiresAuth from "./middleware/requireAuth";
-import activityRoute from "./routes/activity";
 import chatRoute from "./routes/chat";
 import commentRoute from "./routes/comment";
 import projectRoute from "./routes/project";
@@ -67,7 +66,6 @@ app.use("/api/teams", requiresAuth, teamRoute);
 app.use("/api/status", statusRoute);
 app.use("/api/projects", requiresAuth, projectRoute);
 app.use("/api/comments", requiresAuth, commentRoute);
-app.use("/api/activity", requiresAuth, activityRoute);
 app.use("/api/chat", requiresAuth, chatRoute);
 
 // Catches any URL that has no related route handler

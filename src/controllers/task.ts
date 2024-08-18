@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import task, { taskDeletion, taskModif } from "../models/task";
 import createHttpError from "http-errors";
+import { updateActivity } from "../middleware/activityMiddleware/createActivity";
 
 // Get all tasks based User
 export const getAllUserAssignedTask: RequestHandler = async (
@@ -117,8 +118,8 @@ export const createTask: RequestHandler<
         description,
       },
     });
-
-    res.status(201).json(CreatedTask);
+    res.locals.Task = CreatedTask;
+    next();
   } catch (error) {
     next(error);
   }
@@ -132,6 +133,7 @@ export const updateTask: RequestHandler<
   unknown
 > = async (req, res, next) => {
   try {
+    // New values from the request
     const {
       id,
       name,
@@ -139,46 +141,110 @@ export const updateTask: RequestHandler<
       StoryPoint,
       endDate,
       label,
-      parentId,
       projectId,
       statusId,
       description,
     } = req.body;
-    const creatorId = req.session.userId;
-    if (creatorId === undefined) {
+
+    const userId = req.session.userId;
+    if (userId === undefined) {
       return next(
         createHttpError(401, "You are not authorized to perform this action")
       );
     }
 
-    const FoundedTask = await task.findFirst({
-      where: {
-        id,
-      },
+    const foundedTask = await task.findFirst({
+      where: { id },
     });
-    if (!FoundedTask) {
-      return next();
+
+    if (!foundedTask) {
+      return next(createHttpError(404, "Task not found"));
     }
 
     const updatedData: Partial<taskModif> = {};
-    if (name) updatedData.name = name;
-    if (AssigneeId) updatedData.AssigneeId = AssigneeId;
-    if (StoryPoint) updatedData.StoryPoint = StoryPoint;
-    if (label) updatedData.label = label;
-    if (parentId) updatedData.parentId = parentId;
-    if (statusId) updatedData.statusId = statusId;
-    if (projectId) updatedData.projectId = projectId;
-    if (description) updatedData.description = description;
-    const UpdatedTask = await task.update({
-      where: {
-        id,
-      },
-      data: {
-        ...updatedData,
-        endDate: endDate ? new Date(endDate) : undefined,
-      },
-    });
-    return res.status(200).json(UpdatedTask);
+    const changes: Record<string, { oldValue: string; newValue: string }> = {};
+
+    // Compare each property and track changes
+    if (name && name !== foundedTask.name) {
+      updatedData.name = name;
+      changes.name = { oldValue: foundedTask.name, newValue: name };
+    }
+    if (AssigneeId && AssigneeId !== foundedTask.AssigneeId) {
+      updatedData.AssigneeId = AssigneeId;
+      changes.AssigneeId = {
+        oldValue: foundedTask.AssigneeId?.toString() || "Unassigned",
+        newValue: AssigneeId.toString() || "Unassigned",
+      };
+    }
+    if (StoryPoint && StoryPoint !== foundedTask.StoryPoint) {
+      updatedData.StoryPoint = StoryPoint;
+      changes.StoryPoint = {
+        oldValue: foundedTask.StoryPoint?.toString() || "no value ",
+        newValue: StoryPoint?.toString() || "no value ",
+      };
+    }
+    if (
+      endDate &&
+      new Date(endDate).toISOString() !== foundedTask?.endDate?.toISOString()
+    ) {
+      updatedData.endDate = new Date(endDate).toISOString();
+      changes.endDate = {
+        oldValue: foundedTask.endDate?.toString() || "",
+        newValue: new Date(endDate).toISOString(),
+      };
+    }
+    if (label && label !== foundedTask.label) {
+      updatedData.label = label;
+      changes.label = { oldValue: foundedTask.label || "", newValue: label };
+    }
+    if (statusId && statusId !== foundedTask.statusId) {
+      updatedData.statusId = statusId;
+      changes.statusId = {
+        oldValue: foundedTask.statusId?.toString() || "",
+        newValue: statusId.toString(),
+      };
+    }
+    if (projectId && projectId !== foundedTask.projectId) {
+      updatedData.projectId = projectId;
+      changes.projectId = {
+        oldValue: foundedTask.projectId.toString(),
+        newValue: projectId.toString(),
+      };
+    }
+    if (description && description !== foundedTask.description) {
+      updatedData.description = description;
+      changes.description = {
+        oldValue: foundedTask.description || "",
+        newValue: description,
+      };
+    }
+
+    // Update the task if there are any changes
+    if (Object.keys(updatedData).length > 0) {
+      const updatedTask = await task.update({
+        where: { id },
+        data: {
+          ...updatedData,
+          endDate: endDate ? new Date(endDate) : undefined,
+        },
+      });
+
+      // Register the changes as an activity
+      for (const [, value] of Object.entries(changes)) {
+        await updateActivity(
+          userId,
+          updatedTask.projectId,
+          id,
+          value.oldValue,
+          value.newValue,
+          next
+        );
+      }
+
+      return res.status(200).json(updatedTask);
+    }
+
+    return res.status(200).json(foundedTask); // No changes, return original task
   } catch (error) {
     return next(error);
   }
@@ -236,9 +302,9 @@ export const deleteTask: RequestHandler<
         id: +id,
       },
     });
-    res
-      .status(200)
-      .json({ message: "Task deleted successfully", FoundedTask: FoundedTask });
+    console.log(FoundedTask);
+    res.locals.Task = FoundedTask;
+    next();
   } catch (error) {
     next(error);
   }

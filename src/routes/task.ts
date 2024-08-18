@@ -3,12 +3,13 @@ import * as TaskController from "../controllers/task";
 import { checkError } from "../middleware/requireAuth";
 import { validateTask } from "../util/validators/validateData";
 import checkAuthorization from "../middleware/autorisationMidlwares/isAuthorised";
-import { Action, ModuleType } from "@prisma/client";
+import { Action, TASKACTIVITYTYPE, ModuleType } from "@prisma/client";
 import {
   deleteAuth,
   extendAuth,
   updateAuth,
 } from "../middleware/autorisationMidlwares/extendAuth";
+import { createDeleteActivity } from "../middleware/activityMiddleware/createActivity";
 
 const router = Router();
 //no authorisation needed to perform these actions
@@ -16,7 +17,6 @@ router.get("/user/assigned", TaskController.getAllUserAssignedTask);
 router.get("/user/created", TaskController.getAllUserCreatedTask);
 router.get("/project/:projectId", TaskController.getProjectTasks);
 router.get("/:id", TaskController.getTask);
-router.delete("/user", TaskController.deleteUserTasks);
 
 //here we give permission dynamically
 router.post(
@@ -40,7 +40,8 @@ router.post(
   validateTask,
   checkError,
   checkAuthorization(ModuleType.TASKMANAGER, Action.CREATE),
-  TaskController.createTask
+  TaskController.createTask,
+  createDeleteActivity(TASKACTIVITYTYPE.CREATE)
 );
 router.put(
   "/",
@@ -51,13 +52,9 @@ router.put(
   TaskController.createTask
 );
 router.delete(
-  "/project/:id",
-  checkAuthorization(ModuleType.TASKMANAGER, Action.DELETE),
-  TaskController.deleteProjectTask
-);
-router.delete(
   "/:id",
   checkAuthorization(ModuleType.TASKMANAGER, Action.DELETE),
-  TaskController.deleteTask
+  TaskController.deleteTask,
+  createDeleteActivity(TASKACTIVITYTYPE.DELETE)
 );
 export default router;
