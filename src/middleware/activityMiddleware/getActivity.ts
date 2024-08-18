@@ -38,13 +38,15 @@ export const getActivitiesByType: RequestHandler<
       });
     }
 
-    if (validTypes.includes(normalizedType as TASKACTIVITYTYPE)) {
+    const validTaskTypes = Object.values(TASKACTIVITYTYPE) as string[];
+
+    if (validTaskTypes.includes(normalizedType)) {
       const activities = await TaskActivity.findMany({
         where: {
           projectId: +projectId,
           activityType: normalizedType as TASKACTIVITYTYPE,
         },
-        orderBy: { createdAt: "asc" },
+        orderBy: { createdAt: "desc" },
       });
       return res.json(activities);
     } else {
@@ -53,7 +55,7 @@ export const getActivitiesByType: RequestHandler<
           projectId: +projectId,
           activityType: normalizedType as MEMBERSHIPACTIVITYTYPE,
         },
-        orderBy: { createdAt: "asc" },
+        orderBy: { createdAt: "desc" },
       });
       return res.json(activities);
     }

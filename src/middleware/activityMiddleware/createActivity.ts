@@ -2,14 +2,14 @@ import { NextFunction, RequestHandler } from "express";
 import {
   TaskActivity,
   MembershipActivity,
-  CreateActivity,
+  TActivity,
 } from "../../models/activity";
 import { TASKACTIVITYTYPE, MEMBERSHIPACTIVITYTYPE } from "@prisma/client";
 import createHttpError from "http-errors";
 
 export const createDeleteActivity = (
   activityType: TASKACTIVITYTYPE
-): RequestHandler<unknown, unknown, CreateActivity, unknown> => {
+): RequestHandler<unknown, unknown, TActivity, unknown> => {
   return async (req, res, next) => {
     const { userId } = req.session;
     const { Task } = res.locals;
@@ -50,6 +50,7 @@ export const updateActivity = async (
   userId: number,
   projectId: number,
   taskId: number,
+  fieldName: string,
   oldValue: string,
   newValue: string,
   next: NextFunction
@@ -72,6 +73,7 @@ export const updateActivity = async (
     userId: +userId,
     createdAt: new Date(),
     activityType,
+    fieldName,
     projectId: +projectId,
     oldValue,
     taskId: +taskId,
@@ -88,7 +90,7 @@ export const updateActivity = async (
 
 export const JoinLeaveActivity = (
   activityType: MEMBERSHIPACTIVITYTYPE
-): RequestHandler<unknown, unknown, CreateActivity, unknown> => {
+): RequestHandler<unknown, unknown, TActivity, unknown> => {
   return async (req, res, next) => {
     const { userId, projectId } = req.body;
     if (!userId) {

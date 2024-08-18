@@ -230,11 +230,12 @@ export const updateTask: RequestHandler<
       });
 
       // Register the changes as an activity
-      for (const [, value] of Object.entries(changes)) {
+      for (const [key, value] of Object.entries(changes)) {
         await updateActivity(
           userId,
           updatedTask.projectId,
           id,
+          key,
           value.oldValue,
           value.newValue,
           next

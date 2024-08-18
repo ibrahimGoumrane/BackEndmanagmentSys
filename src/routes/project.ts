@@ -9,6 +9,7 @@ import {
   deleteAuth,
   extendAuth,
 } from "../middleware/autorisationMidlwares/extendAuth";
+import { getActivitiesByType } from "../middleware/activityMiddleware/getActivity";
 
 const router = Router();
 
@@ -23,6 +24,8 @@ router.get("/task/:id", ProjectController.getProjectTasks);
 router.get("/auth", ProjectController.getProjectAuth);
 router.get("/info/:id", ProjectController.getProjectInfo);
 router.get("/img/:id", ProjectController.getProjectImage);
+//related to projectActivity
+router.get("/activity/:projectId/:activityType", getActivitiesByType);
 
 router.get("/:id", ProjectController.ProjectData);
 //here we give the auth to the creator
