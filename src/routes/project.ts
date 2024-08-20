@@ -67,14 +67,20 @@ router.delete(
 //checkAuth
 router.put(
   "/user",
-  checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
+  checkAuthorization(ModuleType.PROJECT, Action.DELETE),
   ProjectController.updateProjectMembers
 );
+
 router.put(
   "/:id",
   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
   ProjectController.updateProject,
   ProjectController.createProject
+);
+
+router.delete(
+  "/leaveProject/:projectid",
+  ProjectController.leaveProject
 );
 router.delete(
   "/:id",

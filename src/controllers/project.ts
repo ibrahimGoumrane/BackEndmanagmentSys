@@ -565,6 +565,58 @@ export const updateProjectMembers: RequestHandler<
   }
 };
 
+
+export const leaveProject: RequestHandler<
+ProjectModifDelete,
+  unknown,
+  unknown,
+  ExtendedQuery
+> = async (req, res, next) => {
+  const {  id } = req.params;
+  const {userId} = req.session;
+
+  try {
+    // Find the project entity
+    const projectEntity = await project.findFirst({
+      where: { id: Number(id) },
+    });
+
+    if (!projectEntity) {
+      throw createHttpError(404, "Project not found");
+    }
+
+
+    const asso = await projectMemeberAssociation.findFirst({
+      where: {
+        projectId: Number(id),
+        userId: userId,
+      },
+    });
+    
+    // Remove all existing project members and their authorizations
+    await projectMemeberAssociation.delete({
+      where: {
+        id:asso?.id
+      },
+    });
+  
+    await Autorisation.deleteMany({
+      where: {
+        moduleId: Number(id),
+        userId: userId,
+      },
+    });
+
+      res.status(200).json({
+        message: "You have left the project successfully",
+      });
+    }
+  catch (error) {
+    next(error);
+  }
+};
+
+
 export const deleteProject: RequestHandler<
   ProjectModifDelete,
   unknown,
