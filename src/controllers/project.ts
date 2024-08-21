@@ -124,8 +124,7 @@ export const getProjectImage: RequestHandler = async (req, res, next) => {
     if (!projectData) {
       throw createHttpError(404, "Project not found");
     }
-    const imageUrl = `/uploads/profile/${path.basename(projectData.projectImage ?? "")}`;
-
+    const imageUrl = `/uploads/project/${path.basename(projectData.projectImage ?? "")}`;
     res.json(imageUrl);
   } catch (error) {
     next(error);
@@ -565,15 +564,14 @@ export const updateProjectMembers: RequestHandler<
   }
 };
 
-
 export const leaveProject: RequestHandler<
-ProjectModifDelete,
+  ProjectModifDelete,
   unknown,
   unknown,
   ExtendedQuery
 > = async (req, res, next) => {
-  const {  id } = req.params;
-  const {userId} = req.session;
+  const { id } = req.params;
+  const { userId } = req.session;
 
   try {
     // Find the project entity
@@ -585,21 +583,20 @@ ProjectModifDelete,
       throw createHttpError(404, "Project not found");
     }
 
-
     const asso = await projectMemeberAssociation.findFirst({
       where: {
         projectId: Number(id),
         userId: userId,
       },
     });
-    
+
     // Remove all existing project members and their authorizations
     await projectMemeberAssociation.delete({
       where: {
-        id:asso?.id
+        id: asso?.id,
       },
     });
-  
+
     await Autorisation.deleteMany({
       where: {
         moduleId: Number(id),
@@ -607,15 +604,13 @@ ProjectModifDelete,
       },
     });
 
-      res.status(200).json({
-        message: "You have left the project successfully",
-      });
-    }
-  catch (error) {
+    res.status(200).json({
+      message: "You have left the project successfully",
+    });
+  } catch (error) {
     next(error);
   }
 };
-
 
 export const deleteProject: RequestHandler<
   ProjectModifDelete,

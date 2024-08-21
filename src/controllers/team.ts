@@ -328,6 +328,13 @@ export const createTeam: RequestHandler<
         teamImage: uploadPath,
       },
     });
+    await teamMember.create({
+      data: {
+        userId,
+        teamId: newTeam.id,
+      },
+    });
+
     req.params.id = newTeam.id;
     next();
   } catch (error) {
@@ -348,13 +355,13 @@ export const getTeamImage: RequestHandler<
     }
     const teamExsist = await team.findFirst({
       where: {
-        id,
+        id: Number(id),
       },
     });
     if (!teamExsist) {
       throw createHttpError(400, "Team already exists");
     }
-    const imageUrl = `/uploads/profile/${path.basename(teamExsist.teamImage ?? "")}`;
+    const imageUrl = `/uploads/team/${path.basename(teamExsist.teamImage ?? "")}`;
     res.json(imageUrl);
   } catch (error) {
     next(error);

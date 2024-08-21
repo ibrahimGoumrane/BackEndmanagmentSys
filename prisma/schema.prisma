@@ -206,15 +206,15 @@ model ProjectMemberAssociation {
 
 // Team model
 model Team {
-  id                     Int                      @id @default(autoincrement())
-  name                   String
-  members                TeamMember[]
-  ownerId                Int
-  teamImage              String?                    
-  owner                  User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  chats     TeamChat[] // Relation to the TeamChat model
+  id         Int          @id @default(autoincrement())
+  name       String       @unique // Ensure team names are unique
+  members    TeamMember[]
+  ownerId    Int
+  teamImage  String?      
+  owner      User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  chats      TeamChat[]   // Relation to the TeamChat model
 
-  @@index([name]) // Index on name
+  @@index([name]) // Index on name for performance
 }
 
 // TeamMember model
@@ -227,8 +227,8 @@ model TeamMember {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId]) // Index on userId
-  @@index([teamId]) // Index on teamId
+  @@index([userId]) // Index on userId for performance
+  @@index([teamId]) // Index on teamId for performance
 }
 
 
