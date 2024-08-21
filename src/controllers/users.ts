@@ -1,4 +1,9 @@
+import bcrypt from "bcrypt";
 import { RequestHandler } from "express";
+import createHttpError from "http-errors";
+import handleUploadImg from "../middleware/ImgUploads/handleUploadImg";
+import { userskills } from "../models/skills";
+import { teamMember } from "../models/team";
 import {
   DeleteBody,
   LoginBody,
@@ -8,12 +13,7 @@ import {
   UserUpdateSkills,
   UserUpdateTeams,
 } from "../models/user";
-import createHttpError from "http-errors";
-import bcrypt from "bcrypt";
-import { userskills } from "../models/skills";
-import { teamMember } from "../models/team";
-import { projectRoot } from "../app";
-import path from "path";
+import handleDeleteImg from "../middleware/ImgUploads/handleDeleteImg";
 
 export const getLoggedInUser: RequestHandler = async (req, res, next) => {
   const userId = req.session.userId;
@@ -97,20 +97,11 @@ export const signUp: RequestHandler<
     const passwordHashed = await bcrypt.hash(passwordRaw, 10);
 
     ///working on profile image
-    let uploadPath = projectRoot + "\\uploads\\profile\\default.jpg";
-    if (req.files && req.files.profileImg) {
-      if (!(req.files?.profileImg instanceof Array) && req.files?.profileImg) {
-        const uploadedFile = req.files.profileImg;
-        const fileName = `${Date.now()}-${uploadedFile.name}`;
-        uploadPath = projectRoot + "\\uploads\\profile\\" + fileName;
-        uploadedFile.mv(uploadPath, (err) => {
-          if (err) {
-            return next(createHttpError(500, "Failed to upload file"));
-          }
-        });
-      }
+    let uploadPath = "/uploads/profile/default.jpg";
+    const newPath = handleUploadImg(req.files?.profileImg);
+    if (newPath) {
+      uploadPath = newPath;
     }
-
     //working on skill
     let newUser = null;
     if (!skills) {
@@ -192,16 +183,57 @@ export const getProfileImage: RequestHandler = async (req, res, next) => {
     if (!userData || !userData.profileImg) {
       return next(createHttpError(404, "Image not found"));
     }
-
-    // Generate the URL to access the image
-    const imageUrl = `/uploads/profile/${path.basename(userData.profileImg)}`;
-
-    res.json(imageUrl);
+    res.json(userData.profileImg);
   } catch (error) {
     next(error);
   }
 };
+export const updateUserProfile: RequestHandler<
+  unknown,
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  const { userId } = req.session;
 
+  try {
+    if (!userId) {
+      throw createHttpError(401, "Unauthenticated");
+    }
+    const userdata = await user.findUnique({
+      where: {
+        id: +userId,
+      },
+    });
+    if (!userdata) {
+      throw createHttpError(404, "User not found");
+    }
+
+    //handle Delete Previous Image
+    if (
+      userdata.profileImg &&
+      userdata.profileImg !== "/uploads/profile/default.jpg"
+    ) {
+      await handleDeleteImg(userdata.profileImg);
+    }
+    const uploadDirection = handleUploadImg(req.files?.profileImg);
+    console.log(uploadDirection);
+    if (!uploadDirection) {
+      throw createHttpError(400, "Image upload failed");
+    }
+    await user.update({
+      where: {
+        id: +userId,
+      },
+      data: {
+        profileImg: uploadDirection,
+      },
+    });
+    res.status(200).json(uploadDirection);
+  } catch (error) {
+    next(error);
+  }
+};
 export const logout: RequestHandler = async (req, res, next) => {
   try {
     req.session.destroy((err) => {
@@ -283,22 +315,24 @@ export const updateUserSkills: RequestHandler<
       throw createHttpError(400, "User ID is missing in session");
     }
 
-    // Delete all existing skills for the user
-    await userskills.deleteMany({
-      where: {
-        userId: +userId,
-      },
-    });
-
     // Create new skills for the user
-    const newUserSkills = await userskills.createMany({
+    await userskills.createMany({
       data: skills.map((skillId) => ({
         userId: +userId,
         skillId: +skillId,
       })),
     });
-
-    res.status(200).json(newUserSkills);
+    //fetchNewSkills
+    const newSkills = await userskills.findMany({
+      where: {
+        userId: +userId,
+      },
+      include: {
+        skill: true,
+      },
+    });
+    const data = newSkills.map((skill) => skill.skill.name);
+    res.status(200).json(data);
   } catch (error) {
     next(error);
   }
