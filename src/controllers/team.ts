@@ -54,31 +54,6 @@ export const getTeams: RequestHandler<
   }
 };
 
-export const getTeamByUserId: RequestHandler<
-  TeamDeletion,
-  unknown,
-  unknown,
-  unknown
-> = async (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const teamData = await teamMember.findMany({
-      where: {
-        userId: Number(id),
-      },
-      select: {
-        team: true,
-      },
-    });
-    if (!teamData) {
-      throw createHttpError(404, "This user is not envolved in any team");
-    }
-    const Teams = teamData.map((team) => team.team);
-    res.status(200).json(Teams);
-  } catch (error) {
-    next(error);
-  }
-};
 export const getTeam: RequestHandler<
   TeamDeletion,
   unknown,
@@ -170,13 +145,25 @@ export const getTeamMembers: RequestHandler<
         teamId: Number(id),
       },
       include: {
-        user: true,
+        user: {
+          include: {
+            UserSkill: {
+              select: {
+                skill: true,
+              },
+            },
+          },
+        },
       },
     });
     if (!userTeams) {
       throw createHttpError(404, "there is no user in this team");
     }
-    const returnValue = userTeams.map((user) => user.user);
+
+    const returnValue = userTeams.map((user) => ({
+      ...user.user,
+      skills: user.user.UserSkill.map((skill) => skill.skill.name),
+    }));
     res.status(200).json(returnValue);
   } catch (error) {
     next(error);
@@ -467,17 +454,17 @@ export const deleteTeamMember: RequestHandler<
   try {
     const teamUserBound = await teamMember.findFirst({
       where: {
-        id: Number(id),
+        teamId: +id,
         userId: +userId,
       },
     });
+    console.log(teamUserBound);
     if (!teamUserBound) {
       throw createHttpError(404, "User not in the team or team not found");
     }
     await teamMember.delete({
       where: {
-        id: +id,
-        userId: +userId,
+        id: teamUserBound.id,
       },
     });
     return next();

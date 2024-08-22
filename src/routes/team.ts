@@ -13,7 +13,6 @@ const router = Router();
 
 //evryone can do them
 router.get("/", TeamController.getTeams);
-router.get("/members/:id", TeamController.getTeamByUserId);
 router.get("/data/:id", TeamController.getTeamData);
 router.get("/:id", TeamController.getTeam);
 router.get("/user/:id", TeamController.getUserTeam);
