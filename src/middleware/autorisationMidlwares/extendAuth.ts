@@ -5,6 +5,7 @@ import {
   updateDeleteAuth,
 } from "../../models/autorisation";
 import { Action, ModuleType } from "@prisma/client";
+import createHttpError from "http-errors";
 const checkData = ({
   userId,
   moduleId,
@@ -16,14 +17,10 @@ const checkData = ({
 > => {
   return (req, res, next) => {
     if (!userId) {
-      next({
-        message: "User not authenticated or no " + userId + " Provided",
-      });
+      return next(createHttpError(401, "User not authenticated"));
     }
     if (!moduleId) {
-      next({
-        message: "No " + moduleId + " Provided",
-      });
+      return next(createHttpError(401, "No moduleId Provided"));
     }
     next();
   };
@@ -50,7 +47,7 @@ export const extendAuth = (
           },
         });
         if (!newAuthorisation) {
-          return next({ message: "Failed to give authorisation" });
+          return next(createHttpError(403, "Unauthorized"));
         }
         return res.status(200).json({
           message: "Authorisation given successfully",
@@ -84,9 +81,7 @@ export const updateAuth = (
         });
 
         if (!updatedAuth) {
-          return res.status(404).json({
-            message: "Authorization not found or update failed",
-          });
+          return next(createHttpError(403, "Unauthorized"));
         }
 
         return res.status(200).json({
@@ -115,14 +110,11 @@ export const deleteAuth = (): RequestHandler<
       });
 
       if (!deletedAuth) {
-        return res.status(404).json({
-          message: "Authorization not found or delete failed",
-        });
+        return next(createHttpError(403, "Unauthorized"));
       }
 
       return res.status(200).json({
         message: "Authorization deleted successfully",
-
         deletedAuth,
       });
     } catch (error) {

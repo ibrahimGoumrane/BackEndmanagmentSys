@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { TASKACTIVITYTYPE, MEMBERSHIPACTIVITYTYPE } from "@prisma/client";
 import { MembershipActivity, TaskActivity } from "../../models/activity";
+import createHttpError from "http-errors";
 
 export const getActivitiesByType: RequestHandler<
   { projectId: string; activityType: string },
@@ -12,10 +13,7 @@ export const getActivitiesByType: RequestHandler<
   const { userId } = req.session;
 
   if (!userId) {
-    return next({
-      message: "User not authenticated",
-      status: 401,
-    });
+    return next(createHttpError(401, "User not authenticated"));
   }
 
   try {
@@ -32,10 +30,7 @@ export const getActivitiesByType: RequestHandler<
       !validTypes.includes(normalizedType as TASKACTIVITYTYPE) &&
       !validTypes.includes(normalizedType as TASKACTIVITYTYPE)
     ) {
-      return next({
-        message: "Invalid activity type",
-        status: 400,
-      });
+      return next(createHttpError(400, "Invalid activity type"));
     }
 
     const validTaskTypes = Object.values(TASKACTIVITYTYPE) as string[];

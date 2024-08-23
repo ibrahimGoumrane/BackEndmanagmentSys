@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { Autorisation, Params } from "../../models/autorisation";
 import { Action, ModuleType } from "@prisma/client";
+import createHttpError from "http-errors";
 
 const giveAuth = (
   moduleType: ModuleType,
@@ -10,14 +11,10 @@ const giveAuth = (
     const { userId } = req.session;
     const { id: moduleId } = req.params; // Assuming userId is stored in the session
     if (!userId) {
-      return res.status(401).json({
-        message: "User not authenticated or no " + moduleType + " Provided",
-      });
+      return next(createHttpError(401, "User not authenticated"));
     }
     if (!moduleId) {
-      return res.status(401).json({
-        message: "No " + moduleType + " Provided",
-      });
+      return next(createHttpError(401, "No " + moduleType + " Provided"));
     }
     try {
       const newAuthorisation = await Autorisation.create({
@@ -29,7 +26,7 @@ const giveAuth = (
         },
       });
       if (!newAuthorisation) {
-        return next({ message: "Failed to give authorisation" });
+        return next(createHttpError(403, "Unauthorized"));
       }
       next();
     } catch (error) {

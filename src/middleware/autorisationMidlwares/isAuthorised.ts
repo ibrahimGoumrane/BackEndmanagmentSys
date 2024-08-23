@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { Autorisation, ExtendedQuery } from "../../models/autorisation";
 import { Action, ModuleType } from "@prisma/client";
+import createHttpError from "http-errors";
 
 const checkAuthorization = (
   moduleType: ModuleType,
@@ -31,10 +32,7 @@ const checkAuthorization = (
       console.log(userId, moduleId, authorization);
 
       if (!authorization) {
-        return res.status(403).json({
-          message:
-            "Forbidden: You do not have permission to perform this action",
-        });
+        return next(createHttpError(403, "Unauthorized"));
       }
       return next();
     } catch (error) {

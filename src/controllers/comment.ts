@@ -151,9 +151,7 @@ export const deleteComment: RequestHandler<
       },
     });
     if (!commentExist) {
-      res.status(200).json({
-        message: "Comment not found",
-      });
+      next(createHttpError(404, "Comment not found"));
     }
     const deletedComment = await comment.deleteMany({
       where: {
