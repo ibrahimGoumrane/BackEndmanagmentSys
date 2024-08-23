@@ -428,7 +428,10 @@ export const getUserProjects: RequestHandler<
         project: true,
       },
     });
-    const returnedProject = userProjects.map((project) => project.project);
+    const returnedProject = userProjects.map((project) => ({
+      ...project.project,
+      projectImage: `/uploads/project/${path.basename(project.project.projectImage ?? "")}`,
+    }));
     if (!returnedProject) {
       throw createHttpError(404, "No projects found");
     }
@@ -475,15 +478,21 @@ export const updateProject: RequestHandler<
     if (!projectExsist) {
       return next();
     }
-    //check if there is a project with the same name
-    const projectExist = await project.findMany({
-      where: {
-        name,
-      },
-    });
-    if (projectExist.length > 1) {
-      throw createHttpError(409, "A project with the same name already exists");
+
+    if (projectExsist.name !== name) {
+      const projectExist = await project.findMany({
+        where: {
+          name,
+        },
+      });
+      if (projectExist.length > 0) {
+        throw createHttpError(
+          409,
+          "A project with the same name already exists"
+        );
+      }
     }
+    //check if there is a project with the same name
     const projectModf = await project.update({
       where: { id: Number(id) },
       data: updateData,
