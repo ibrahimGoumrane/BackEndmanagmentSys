@@ -10,7 +10,7 @@ generator client {
 // User model
 model User {
   id                        Int                        @id @default(autoincrement())
-  name                      String
+  name                      String                     @unique
   email                     String                     @unique
   password                  String
   age                       Int
@@ -84,7 +84,7 @@ model TaskStatus {
 // Project model
 model Project {
   id                       Int                        @id @default(autoincrement())
-  name                     String
+  name                     String                     @unique
   statusId                 Int?                       @default(0)
   status                   ProjectStatus?             @relation(fields: [statusId], references: [id])
   ManagerId                Int

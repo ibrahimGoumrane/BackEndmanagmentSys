@@ -20,3 +20,21 @@ export default function handleUploadImg(
 
   return imageUrl;
 }
+export function handleProjectUploads(
+  uploadedFile: UploadedFile | UploadedFile[] | undefined
+): string | undefined {
+  if (!uploadedFile) return;
+
+  if (uploadedFile instanceof Array) return;
+
+  const fileName = `${Date.now()}-${uploadedFile.name}`;
+  const uploadPath = projectRoot + "\\uploads\\project\\" + fileName;
+  uploadedFile.mv(uploadPath, (err) => {
+    if (err) {
+      return;
+    }
+  });
+  const imageUrl = `\\uploads\\project\\${path.basename(uploadPath)}`;
+
+  return imageUrl;
+}

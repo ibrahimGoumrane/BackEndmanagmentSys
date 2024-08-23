@@ -70,7 +70,11 @@ router.put(
   checkAuthorization(ModuleType.PROJECT, Action.DELETE),
   ProjectController.updateProjectMembers
 );
-
+router.put(
+  "/projectImage/:id",
+  checkAuthorization(ModuleType.PROJECT, Action.DELETE),
+  ProjectController.updateProjectImage
+);
 router.put(
   "/:id",
   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),

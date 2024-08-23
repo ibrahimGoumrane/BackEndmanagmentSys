@@ -1,22 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { ModuleType } from "@prisma/client";
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
-import {
-  ProjectModifDelete,
-  ProjectSearch,
-  ProjectUpdate,
-  project,
-  projectMemeberAssociation,
-  getProjectData,
-  ResponseToJoin,
-} from "../models/project";
-import { Member, user, User } from "../models/user";
+import path from "path";
+import { projectRoot } from "../app";
+import emailSender from "../middleware/emailHandler/emailSender";
 import {
   acceptanceRequestTeamEmail,
   emailRequestTeamTemplate,
   rejectionRequestTeamEmail,
 } from "../middleware/emailTemplates/teamEmail";
-import emailSender from "../middleware/emailHandler/emailSender";
+import handleDeleteImg from "../middleware/ImgUploads/handleDeleteImg";
+import { handleProjectUploads } from "../middleware/ImgUploads/handleUploadImg";
 import {
   authorisation,
   Autorisation,
@@ -24,9 +19,16 @@ import {
   autorisationModelInputs,
   ExtendedQuery,
 } from "../models/autorisation";
-import { ModuleType } from "@prisma/client";
-import { projectRoot } from "../app";
-import path from "path";
+import {
+  getProjectData,
+  project,
+  projectMemeberAssociation,
+  ProjectModifDelete,
+  ProjectSearch,
+  ProjectUpdate,
+  ResponseToJoin,
+} from "../models/project";
+import { Member, user } from "../models/user";
 
 export const getProjects: RequestHandler<
   unknown,
@@ -370,6 +372,20 @@ export const createProject: RequestHandler<
   const uploadPath = projectRoot + "\\uploads\\project\\default.jpg";
 
   try {
+    if (!name || !description) {
+      throw createHttpError(400, "Please provide all the required fields");
+    }
+
+    //check if a project with the same name already exists
+    const projectExist = await project.findFirst({
+      where: {
+        name,
+      },
+    });
+    if (projectExist) {
+      throw createHttpError(409, "A project with the same name already exists");
+    }
+
     const projectModal = await project.create({
       data: {
         name: name || "",
@@ -458,6 +474,15 @@ export const updateProject: RequestHandler<
     });
     if (!projectExsist) {
       return next();
+    }
+    //check if there is a project with the same name
+    const projectExist = await project.findMany({
+      where: {
+        name,
+      },
+    });
+    if (projectExist.length > 1) {
+      throw createHttpError(409, "A project with the same name already exists");
     }
     const projectModf = await project.update({
       where: { id: Number(id) },
@@ -559,6 +584,55 @@ export const updateProjectMembers: RequestHandler<
     } else {
       res.status(200).json([]);
     }
+  } catch (error) {
+    next(error);
+  }
+};
+export const updateProjectImage: RequestHandler<
+  ProjectModifDelete,
+  unknown,
+  unknown,
+  ExtendedQuery
+> = async (req, res, next) => {
+  const { userId } = req.session;
+  const { id } = req.params;
+
+  try {
+    if (!userId) {
+      throw createHttpError(401, "Unauthenticated");
+    }
+    if (!id) {
+      throw createHttpError(400, "Please provide the project Id");
+    }
+    const projectData = await project.findUnique({
+      where: {
+        id: +id,
+      },
+    });
+    if (!projectData) {
+      throw createHttpError(404, "User not found");
+    }
+
+    //handle Delete Previous Image
+    if (
+      projectData.projectImage &&
+      projectData.projectImage !== "/uploads/project/default.jpg"
+    ) {
+      await handleDeleteImg(projectData.projectImage);
+    }
+    const uploadDirection = handleProjectUploads(req.files?.projectImg);
+    if (!uploadDirection) {
+      throw createHttpError(400, "Image upload failed");
+    }
+    await project.update({
+      where: {
+        id: +id,
+      },
+      data: {
+        projectImage: uploadDirection,
+      },
+    });
+    res.status(200).json(uploadDirection);
   } catch (error) {
     next(error);
   }
