@@ -75,7 +75,7 @@ export const getTask: RequestHandler = async (req, res, next) => {
       id: FoundedTask?.id,
       name: FoundedTask?.name,
       description: FoundedTask?.description,
-      storyPoint: FoundedTask?.StoryPoint,
+      StoryPoint: FoundedTask?.StoryPoint,
       endDate: FoundedTask?.endDate,
       startDate: FoundedTask?.startDate,
       createdAt: FoundedTask?.createdAt,

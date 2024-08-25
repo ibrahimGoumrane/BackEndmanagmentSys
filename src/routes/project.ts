@@ -82,6 +82,11 @@ router.put(
   ProjectController.createProject
 );
 
+router.delete(
+  "/removeMember/:id",
+  checkAuthorization(ModuleType.PROJECT, Action.DELETE),
+  ProjectController.removeMember
+);
 router.delete("/leaveProject/:id", ProjectController.leaveProject);
 router.delete(
   "/:id",

@@ -29,6 +29,7 @@ import {
   ResponseToJoin,
 } from "../models/project";
 import { Member, user } from "../models/user";
+import task from "../models/task";
 
 export const getProjects: RequestHandler<
   unknown,
@@ -597,6 +598,78 @@ export const updateProjectMembers: RequestHandler<
     next(error);
   }
 };
+export const removeMember: RequestHandler<
+  ProjectModifDelete,
+  unknown,
+  unknown,
+  ExtendedQuery
+> = async (req, res, next) => {
+  const { moduleId: id } = req.query;
+  const { id: userId } = req.params;
+
+  try {
+    // Find the project entity
+    const projectEntity = await project.findFirst({
+      where: { id: Number(id) },
+    });
+
+    if (!projectEntity) {
+      throw createHttpError(404, "Project not found");
+    }
+    if (!userId) {
+      throw createHttpError(400, "Please provide the user Id");
+    }
+
+    // Remove project members and his authorizations
+    await projectMemeberAssociation.deleteMany({
+      where: {
+        projectId: Number(id),
+        userId: +userId,
+      },
+    });
+    await Autorisation.deleteMany({
+      where: {
+        moduleId: Number(id),
+        userId: +userId,
+      },
+    });
+
+    //remove all tasks created by that user and set the one assigne to him to null
+    await task.deleteMany({
+      where: {
+        creatorId: +userId,
+        projectId: Number(id),
+      },
+    });
+    await task.updateMany({
+      where: {
+        AssigneeId: +userId,
+        projectId: Number(id),
+      },
+      data: {
+        AssigneeId: null,
+      },
+    });
+    //check if the project has no members
+    const projectMembers = await projectMemeberAssociation.findMany({
+      where: {
+        projectId: Number(id),
+      },
+    });
+    if (projectMembers.length === 0) {
+      await project.delete({
+        where: {
+          id: Number(id),
+        },
+      });
+    }
+    res.status(200).json({
+      message: "User removed successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 export const updateProjectImage: RequestHandler<
   ProjectModifDelete,
   unknown,
@@ -673,7 +746,7 @@ export const leaveProject: RequestHandler<
       },
     });
 
-    // Remove all existing project members and their authorizations
+    // Remove project members and his authorizations
     await projectMemeberAssociation.delete({
       where: {
         id: asso?.id,
