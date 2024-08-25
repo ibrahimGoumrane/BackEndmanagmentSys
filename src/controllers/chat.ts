@@ -8,6 +8,7 @@ import {
   Attachment,
 } from "../models/chat";
 import createHttpError from "http-errors";
+import path from "path";
 
 export const getTeamChat: RequestHandler<
   TChat,
@@ -30,10 +31,13 @@ export const getTeamChat: RequestHandler<
       },
     });
     const returnedData = teamChats.map((chat) => {
+      const imageUrl = `/uploads/profile/${path.basename(chat.user.profileImg ?? "")}`;
+
       return {
         id: chat.id,
         teamId: chat.teamId,
         userId: chat.userId,
+        profileImg: imageUrl,
         userName: chat.user.name,
         message: chat.message,
         createdAt: chat.createdAt,
@@ -109,7 +113,6 @@ export const saveTeamMessage: RequestHandler<
         message,
       },
     });
-
 
     res.status(201).json(newMessage);
   } catch (error) {

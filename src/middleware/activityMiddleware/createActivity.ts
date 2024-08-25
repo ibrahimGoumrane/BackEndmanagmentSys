@@ -61,9 +61,6 @@ export const updateActivity = async (
   if (!projectId) {
     return next(createHttpError(400, "Project ID is required"));
   }
-  if (!oldValue || !newValue) {
-    return next(createHttpError(400, "Old and new values are required"));
-  }
   if (!taskId) {
     return next(createHttpError(400, "Task ID is required"));
   }

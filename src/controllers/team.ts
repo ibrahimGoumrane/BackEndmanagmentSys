@@ -95,9 +95,9 @@ export const getTeamData: RequestHandler<
         id: true,
       },
     });
-    const teamMembers = await team.findMany({
+    const teamMembers = await teamMember.findMany({
       where: {
-        id: Number(id),
+        teamId: Number(id),
       },
     });
     const returnedData = {
@@ -126,7 +126,15 @@ export const getUserTeam: RequestHandler = async (req, res, next) => {
     if (!userTeams) {
       throw createHttpError(404, "This user is not envolved in any team");
     }
-    const returnValue = userTeams.map((team) => team.team);
+
+    const returnValue = userTeams.map((team) => {
+      const imageUrl = `/uploads/team/${path.basename(team.team.teamImage ?? "")}`;
+
+      return {
+        ...team.team,
+        teamImage: imageUrl,
+      };
+    });
     res.status(200).json(returnValue);
   } catch (error) {
     next(error);
@@ -468,6 +476,55 @@ export const deleteTeamMember: RequestHandler<
       },
     });
     return next();
+
+    res.status(200).json({ message: "Team User Bound deleted" });
+  } catch (error) {
+    next(error);
+  }
+};
+export const leaveTeam: RequestHandler<
+  TeamDeletion,
+  unknown,
+  User,
+  unknown
+> = async (req, res, next) => {
+  const { id } = req.params;
+  const { userId } = req.session;
+  console.log(userId);
+  if (!id) {
+    throw createHttpError(400, "Team ID is required");
+  }
+  if (!userId) {
+    throw createHttpError(401, "User not authenticated");
+  }
+  try {
+    const teamUserBound = await teamMember.findFirst({
+      where: {
+        teamId: +id,
+        userId: +userId,
+      },
+    });
+    if (!teamUserBound) {
+      throw createHttpError(404, "User not in the team or team not found");
+    }
+    await teamMember.delete({
+      where: {
+        id: teamUserBound.id,
+      },
+    });
+    //check if there is no more user in the team
+    const teamMembers = await teamMember.findMany({
+      where: {
+        teamId: +id,
+      },
+    });
+    if (teamMembers.length === 0) {
+      await team.delete({
+        where: {
+          id: +id,
+        },
+      });
+    }
 
     res.status(200).json({ message: "Team User Bound deleted" });
   } catch (error) {

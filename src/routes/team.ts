@@ -63,10 +63,11 @@ router.delete(
   TeamController.deleteTeamMember,
   TeamController.getTeamMembers
 );
+router.delete("/leave/:id", TeamController.leaveTeam);
+
 router.delete(
   "/:id",
   checkAuthorization(ModuleType.TEAM, Action.DELETE),
   TeamController.deleteTeam
 );
-
 export default router;

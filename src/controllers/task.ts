@@ -134,20 +134,11 @@ export const updateTask: RequestHandler<
 > = async (req, res, next) => {
   try {
     // New values from the request
-    const {
-      id,
-      name,
-      AssigneeId,
-      StoryPoint,
-      endDate,
-      label,
-      projectId,
-      statusId,
-      description,
-    } = req.body;
+    const { id, name, AssigneeId, StoryPoint, endDate, statusId, description } =
+      req.body;
 
     const userId = req.session.userId;
-    if (userId === undefined) {
+    if (!userId) {
       return next(
         createHttpError(401, "You are not authorized to perform this action")
       );
@@ -179,7 +170,7 @@ export const updateTask: RequestHandler<
     if (StoryPoint && StoryPoint !== foundedTask.StoryPoint) {
       updatedData.StoryPoint = StoryPoint;
       changes.StoryPoint = {
-        oldValue: foundedTask.StoryPoint?.toString() || "no value ",
+        oldValue: foundedTask.StoryPoint?.toString() || "no value",
         newValue: StoryPoint?.toString() || "no value ",
       };
     }
@@ -189,33 +180,23 @@ export const updateTask: RequestHandler<
     ) {
       updatedData.endDate = new Date(endDate).toISOString();
       changes.endDate = {
-        oldValue: foundedTask.endDate?.toString() || "",
+        oldValue: foundedTask.endDate?.toString() || "No date set",
         newValue: new Date(endDate).toISOString(),
       };
-    }
-    if (label && label !== foundedTask.label) {
-      updatedData.label = label;
-      changes.label = { oldValue: foundedTask.label || "", newValue: label };
     }
     if (statusId && statusId !== foundedTask.statusId) {
       updatedData.statusId = statusId;
       changes.statusId = {
-        oldValue: foundedTask.statusId?.toString() || "",
+        oldValue: foundedTask.statusId?.toString() || "No status",
         newValue: statusId.toString(),
       };
     }
-    if (projectId && projectId !== foundedTask.projectId) {
-      updatedData.projectId = projectId;
-      changes.projectId = {
-        oldValue: foundedTask.projectId.toString(),
-        newValue: projectId.toString(),
-      };
-    }
+
     if (description && description !== foundedTask.description) {
       updatedData.description = description;
       changes.description = {
-        oldValue: foundedTask.description || "",
-        newValue: description,
+        oldValue: foundedTask.description || "No description",
+        newValue: description || "No description",
       };
     }
 
@@ -231,6 +212,11 @@ export const updateTask: RequestHandler<
 
       // Register the changes as an activity
       for (const [key, value] of Object.entries(changes)) {
+        if (!value.oldValue || !value.newValue) {
+          return res.status(400).json({
+            error: `Old and new values are required for ${key}.`,
+          });
+        }
         await updateActivity(
           userId,
           updatedTask.projectId,

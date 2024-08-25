@@ -369,7 +369,7 @@ export const createProject: RequestHandler<
     throw createHttpError(401, "User not authenticated");
   }
   ///working on profile image
-  const uploadPath = projectRoot + "\\uploads\\project\\default.jpg";
+  const uploadPath = "\\uploads\\project\\default.jpg";
 
   try {
     if (!name || !description) {
@@ -687,6 +687,19 @@ export const leaveProject: RequestHandler<
       },
     });
 
+    //check if the project has no members
+    const projectMembers = await projectMemeberAssociation.findMany({
+      where: {
+        projectId: Number(id),
+      },
+    });
+    if (projectMembers.length === 0) {
+      await project.delete({
+        where: {
+          id: Number(id),
+        },
+      });
+    }
     res.status(200).json({
       message: "You have left the project successfully",
     });
