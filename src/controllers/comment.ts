@@ -155,7 +155,7 @@ export const deleteComment: RequestHandler<
     }
     const deletedComment = await comment.deleteMany({
       where: {
-        taskId: Number(id),
+        id: Number(id),
       },
     });
     res.status(200).json(deletedComment);
