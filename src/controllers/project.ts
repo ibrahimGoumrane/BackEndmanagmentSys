@@ -370,7 +370,7 @@ export const createProject: RequestHandler<
     throw createHttpError(401, "User not authenticated");
   }
   ///working on profile image
-  const uploadPath = "\\uploads\\project\\default.jpg";
+  const uploadPath = `/uploads/project/default.jpg`;
 
   try {
     if (!name || !description) {

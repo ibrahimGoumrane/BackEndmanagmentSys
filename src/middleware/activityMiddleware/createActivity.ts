@@ -66,6 +66,11 @@ export const updateActivity = async (
   }
 
   const activityType = TASKACTIVITYTYPE.UPDATE;
+  if (fieldName === "description") {
+    oldValue = oldValue?.split(" ")?.slice(0, 5)?.join(" ") + "...";
+    newValue = newValue?.split(" ")?.slice(0, 5)?.join(" ") + "...";
+  }
+
   const insertedData = {
     userId: +userId,
     createdAt: new Date(),
