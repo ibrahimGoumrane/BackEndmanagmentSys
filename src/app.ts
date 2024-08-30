@@ -27,7 +27,7 @@ export const server = http.createServer(app);
 
 // Define CORS options
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: env.DEV_ORIGIN,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Ensure OPTIONS is included
   credentials: true,
 };
@@ -62,9 +62,9 @@ app.use(
 app.use("/api/users", usersRoute);
 app.use("/api/skills", skillRoute);
 app.use("/api/tasks", requiresAuth, taskRoute);
-app.use("/api/teams", requiresAuth, teamRoute);
+app.use("/api/teams", teamRoute);
 app.use("/api/status", statusRoute);
-app.use("/api/projects", requiresAuth, projectRoute);
+app.use("/api/projects", projectRoute);
 app.use("/api/comments", requiresAuth, commentRoute);
 app.use("/api/chat", requiresAuth, chatRoute);
 

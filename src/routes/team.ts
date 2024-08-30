@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as TeamController from "../controllers/team";
-import { checkError } from "../middleware/requireAuth";
+import requiresAuth, { checkError } from "../middleware/requireAuth";
 import { team } from "../util/validators/validateData";
 import checkAuthorization from "../middleware/autorisationMidlwares/isAuthorised";
 import giveAuth from "../middleware/autorisationMidlwares/giveAuth";
@@ -10,19 +10,22 @@ import {
   updateAuth,
 } from "../middleware/autorisationMidlwares/extendAuth";
 const router = Router();
+const AuthRequiredRouter = Router();
+
+//no auth needed to perform this actions
+router.get("/requestJoin/response", TeamController.handleReponseRequestJoin);
 
 //evryone can do them
-router.get("/", TeamController.getTeams);
-router.get("/data/:id", TeamController.getTeamData);
-router.get("/:id", TeamController.getTeam);
-router.get("/user/:id", TeamController.getUserTeam);
-router.get("/members/:id", TeamController.getTeamMembers);
-router.get("/requestJoin/response", TeamController.handleReponseRequestJoin);
-router.get("/img/:id", TeamController.getTeamImage);
-router.post("/requestJoin", TeamController.requestJoin);
+AuthRequiredRouter.get("/", TeamController.getTeams);
+AuthRequiredRouter.get("/data/:id", TeamController.getTeamData);
+AuthRequiredRouter.get("/:id", TeamController.getTeam);
+AuthRequiredRouter.get("/user/:id", TeamController.getUserTeam);
+AuthRequiredRouter.get("/members/:id", TeamController.getTeamMembers);
+AuthRequiredRouter.get("/img/:id", TeamController.getTeamImage);
+AuthRequiredRouter.post("/requestJoin", TeamController.requestJoin);
 
 //everyone can do them but here only the user how created that team should have accss to its delete and update
-router.post(
+AuthRequiredRouter.post(
   "/createTeam",
   team,
   checkError,
@@ -33,41 +36,42 @@ router.post(
 );
 
 //give auth dynamique
-router.put(
+AuthRequiredRouter.put(
   "/auth",
   checkAuthorization(ModuleType.TEAM, Action.UPDATE),
   updateAuth(ModuleType.TEAM, Action.UPDATE)
 );
 
-router.delete(
+AuthRequiredRouter.delete(
   "/auth",
   checkAuthorization(ModuleType.TEAM, Action.DELETE),
   deleteAuth()
 );
 
 //auth needed
-router.post(
+AuthRequiredRouter.post(
   "/:id",
   checkAuthorization(ModuleType.TEAM, Action.UPDATE),
   TeamController.addUserTeam,
   TeamController.getTeamMembers
 );
-router.put(
+AuthRequiredRouter.put(
   "/:id",
   checkAuthorization(ModuleType.TEAM, Action.UPDATE),
   TeamController.updateTeam
 );
-router.delete(
+AuthRequiredRouter.delete(
   "/members/:id",
   checkAuthorization(ModuleType.TEAM, Action.DELETE),
   TeamController.deleteTeamMember,
   TeamController.getTeamMembers
 );
-router.delete("/leave/:id", TeamController.leaveTeam);
+AuthRequiredRouter.delete("/leave/:id", TeamController.leaveTeam);
 
-router.delete(
+AuthRequiredRouter.delete(
   "/:id",
   checkAuthorization(ModuleType.TEAM, Action.DELETE),
   TeamController.deleteTeam
 );
+router.use("/", requiresAuth, AuthRequiredRouter);
 export default router;

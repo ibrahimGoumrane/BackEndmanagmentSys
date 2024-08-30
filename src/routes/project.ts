@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as ProjectController from "../controllers/project";
 import { validateCreateProject } from "../util/validators/validateData";
-import { checkError } from "../middleware/requireAuth";
+import requiresAuth, { checkError } from "../middleware/requireAuth";
 import checkAuthorization from "../middleware/autorisationMidlwares/isAuthorised";
 import giveAuth from "../middleware/autorisationMidlwares/giveAuth";
 import { Action, ModuleType } from "@prisma/client";
@@ -12,24 +12,31 @@ import {
 import { getActivitiesByType } from "../middleware/activityMiddleware/getActivity";
 
 const router = Router();
-
+const AuthRequiredRouter = Router();
 //no auth needed to perform this actions
-router.get("/", ProjectController.getProjects);
-router.get("/requestJoin/response", ProjectController.handleReponseRequestJoin);
-router.get("/requestJoin/:id", ProjectController.requestToJoin);
-router.get("/user/", ProjectController.getUserProjects);
-router.get("/user/:id", ProjectController.getProjectMembers);
-router.get("/status/:id", ProjectController.getProjectStatus);
-router.get("/task/:id", ProjectController.getProjectTasks);
-router.get("/auth", ProjectController.getProjectAuth);
-router.get("/info/:id", ProjectController.getProjectInfo);
-router.get("/img/:id", ProjectController.getProjectImage);
-//related to projectActivity
-router.get("/activity/:projectId/:activityType", getActivitiesByType);
 
-router.get("/:id", ProjectController.ProjectData);
+//no need for auth
+router.get("/requestJoin/response", ProjectController.handleReponseRequestJoin);
+
+//auth needed
+AuthRequiredRouter.get("/", ProjectController.getProjects);
+AuthRequiredRouter.get("/requestJoin/:id", ProjectController.requestToJoin);
+AuthRequiredRouter.get("/user/", ProjectController.getUserProjects);
+AuthRequiredRouter.get("/user/:id", ProjectController.getProjectMembers);
+AuthRequiredRouter.get("/status/:id", ProjectController.getProjectStatus);
+AuthRequiredRouter.get("/task/:id", ProjectController.getProjectTasks);
+AuthRequiredRouter.get("/auth", ProjectController.getProjectAuth);
+AuthRequiredRouter.get("/info/:id", ProjectController.getProjectInfo);
+AuthRequiredRouter.get("/img/:id", ProjectController.getProjectImage);
+//related to projectActivity
+AuthRequiredRouter.get(
+  "/activity/:projectId/:activityType",
+  getActivitiesByType
+);
+
+AuthRequiredRouter.get("/:id", ProjectController.ProjectData);
 //here we give the auth to the creator
-router.post(
+AuthRequiredRouter.post(
   "/",
   validateCreateProject,
   checkError,
@@ -42,56 +49,57 @@ router.post(
   ProjectController.getProject
 );
 //taskManager Authorisation
-router.post(
+AuthRequiredRouter.post(
   "/auth/taskManager/create",
   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
   extendAuth(ModuleType.TASKMANAGER, Action.CREATE)
 );
-router.post(
+AuthRequiredRouter.post(
   "/auth/taskManager/update",
   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
   extendAuth(ModuleType.TASKMANAGER, Action.UPDATE)
 );
-router.post(
+AuthRequiredRouter.post(
   "/auth/taskManager/delete",
   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
   extendAuth(ModuleType.TASKMANAGER, Action.DELETE)
 );
 //delete a permission
-router.delete(
+AuthRequiredRouter.delete(
   "/auth",
   checkAuthorization(ModuleType.PROJECT, Action.DELETE),
   deleteAuth()
 );
 
 //checkAuth
-router.put(
+AuthRequiredRouter.put(
   "/user",
   checkAuthorization(ModuleType.PROJECT, Action.DELETE),
   ProjectController.updateProjectMembers
 );
-router.put(
+AuthRequiredRouter.put(
   "/projectImage/:id",
   checkAuthorization(ModuleType.PROJECT, Action.DELETE),
   ProjectController.updateProjectImage
 );
-router.put(
+AuthRequiredRouter.put(
   "/:id",
   checkAuthorization(ModuleType.PROJECT, Action.UPDATE),
   ProjectController.updateProject,
   ProjectController.createProject
 );
 
-router.delete(
+AuthRequiredRouter.delete(
   "/removeMember/:id",
   checkAuthorization(ModuleType.PROJECT, Action.DELETE),
   ProjectController.removeMember
 );
-router.delete("/leaveProject/:id", ProjectController.leaveProject);
-router.delete(
+AuthRequiredRouter.delete("/leaveProject/:id", ProjectController.leaveProject);
+AuthRequiredRouter.delete(
   "/:id",
   checkAuthorization(ModuleType.PROJECT, Action.DELETE),
   ProjectController.deleteProject
 );
 
+router.use("/", requiresAuth, AuthRequiredRouter);
 export default router;

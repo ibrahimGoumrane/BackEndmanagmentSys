@@ -17,7 +17,6 @@ import {
   rejectionRequestTeamEmail,
 } from "../middleware/emailTemplates/teamEmail";
 import { Params } from "../models/autorisation";
-import { projectRoot } from "../app";
 import path from "path";
 export const getTeams: RequestHandler<
   unknown,
@@ -277,17 +276,63 @@ export const handleReponseRequestJoin: RequestHandler<
         next(error);
       });
     res.status(200).send(
-      `  <html>
-          <head>
-              <meta http-equiv="refresh" content="3;url=http://localhost:5173/home/" />
-          </head>
-          <body>
-            <h1>Your response has been registered successfully. The user has been ${
-              status === "ACCEPTED" ? "ACCEPTED" : "REJECTED"
-            }</h1>
-              <h1>Redirecting in 3 seconds...</h1>
-          </body>
-      </html>`
+      ` <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expiring Page</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .message {
+            text-align: center;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="message">
+        <h1>Thank You for Clicking!</h1>
+        <p>This page will close automatically in <span id="countdown">3</span> seconds.</p>
+    </div>
+    <script>
+        // Function to close the page
+        function closePage() {
+            window.close();
+        }
+
+        // Countdown timer
+        let countdown = 3; // Time in seconds
+        const countdownElement = document.getElementById('countdown');
+
+        const timer = setInterval(() => {
+            countdown -= 1;
+            countdownElement.textContent = countdown;
+
+            if (countdown <= 0) {
+                clearInterval(timer);
+                closePage();
+                
+            }
+        }, 1000);
+
+        // Optional: Ensure the page closes if opened as a new tab
+        window.onbeforeunload = function() {
+            return 'Are you sure you want to leave?';
+        };
+    </script>
+</body>
+</html>
+`
     );
   } catch (error) {
     next(error);
@@ -314,7 +359,7 @@ export const createTeam: RequestHandler<
     if (teamExsist) {
       throw createHttpError(400, "Team already exists");
     }
-    const uploadPath = projectRoot + "\\uploads\\team\\default.jpg";
+    const uploadPath = "\\uploads\\team\\default.jpg";
 
     const newTeam = await team.create({
       data: {
