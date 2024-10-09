@@ -11,8 +11,8 @@ export const emailRequestTeamTemplate = (
           }  Join Request</h1>
           <p style="font-size: 18px; margin-bottom: 32px;">
             <strong>${name}</strong> is requesting to join your  ${
-    type === "team" ? "Group Chat" : "Project"
-  } . To maintain a safe and engaging environment, please review and approve or reject this request.
+              type === "team" ? "Group Chat" : "Project"
+            } . To maintain a safe and engaging environment, please review and approve or reject this request.
           </p>
           <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #2D3748;">Why are we doing this?</h2>
           <p style="font-size: 16px; margin-bottom: 32px;">
@@ -51,7 +51,7 @@ export const acceptanceRequestTeamEmail = (
           } 
 
           </p>
-          <a href="https://yourdomain.com/group-chat" style="display: inline-block; padding: 12px 24px; background-color: #38A169; color: #ffffff; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">Join the  ${
+          <a href="http://localhost:5173" style="display: inline-block; padding: 12px 24px; background-color: #38A169; color: #ffffff; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">Join the  ${
             type === "team" ? "Group Chat" : "Project"
           } </a>
           <p style="font-size: 16px; margin-top: 40px;">

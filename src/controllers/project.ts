@@ -746,7 +746,7 @@ export const updateProjectImage: RequestHandler<
     ) {
       await handleDeleteImg(projectData.projectImage);
     }
-    const uploadDirection = handleProjectUploads(req.files?.projectImg);
+    const uploadDirection = handleProjectUploads(req.files?.projectImage);
     if (!uploadDirection) {
       throw createHttpError(400, "Image upload failed");
     }
